@@ -102,34 +102,6 @@ const existingSubtasks = [
       coPilot: null,
     },
   },
-  {
-    id: "4",
-    summary: "Cut-in Scenario",
-    type: "Scenario",
-    amountNeeded: 20,
-    requestedEvents: "Vehicle cuts in front at varying distances",
-    metadata: {
-      weather: "Clear",
-      timeOfDay: "Daylight",
-      country: "Israel",
-      extraInfo: "Maintain constant speed",
-      coPilot: null,
-    },
-  },
-  {
-    id: "5",
-    summary: "Emergency Brake Scenario",
-    type: "Scenario",
-    amountNeeded: 15,
-    requestedEvents: "Lead vehicle performs emergency brake",
-    metadata: {
-      weather: "Clear",
-      timeOfDay: "Daylight",
-      country: "Israel",
-      extraInfo: "Various initial distances",
-      coPilot: null,
-    },
-  }
 ]
 
 // Sample data for completed sessions
@@ -206,7 +178,6 @@ const completedSessions = [
 export default function Dashboard() {
   // Main app states
   const [isRecording, setIsRecording] = useState(false)
-  const [hasRecorded, setHasRecorded] = useState(false)
   const [insChecked, setInsChecked] = useState(true)
   const [velodyneChecked, setVelodyneChecked] = useState(true)
   const [testTrackMode, setTestTrackMode] = useState(false)
@@ -319,11 +290,6 @@ export default function Dashboard() {
     .filter((driver) => driver.name.toLowerCase().includes(driverSearch.toLowerCase()))
     .filter((driver) => !testTrackMode || driver.permissions.includes("testtrack"))
 
-  // Filter subtasks based on TestTrack mode
-  const filteredSubtasks = existingSubtasks.filter(
-    subtask => !testTrackMode || subtask.type === "Scenario"
-  )
-
   // Timer functionality
   useEffect(() => {
     if (isRecording && !timerInterval) {
@@ -354,32 +320,6 @@ export default function Dashboard() {
       }
     }
   }, [isRecording, timerInterval])
-
-   // 🧠 NEW: Auto-stop long sessions (MAX 1.5h)
-  useEffect(() => {
-    if (isRecording && startTime) {
-      const warnTimer = setTimeout(() => {
-        toast({
-          title: "Max Session Approaching",
-          description: "Session will end automatically in 5 minutes.",
-          variant: "default"
-        });
-      }, 85 * 60 * 1000);
-      const stopTimer = setTimeout(() => {
-        setIsRecording(false);
-        setDriveSummaryOpen(true);
-        toast({
-          title: "Session Auto-Stopped",
-          description: "1.5 hour session limit reached.",
-          variant: "destructive"
-        });
-      }, 90 * 60 * 1000);
-      return () => {
-        clearTimeout(warnTimer);
-        clearTimeout(stopTimer);
-      };
-    }
-  }, [isRecording, startTime])
 
   // Start the CAR2DB flow
   const startRecordingFlow = () => {
@@ -415,13 +355,7 @@ export default function Dashboard() {
 
     setSubtaskSelectorOpen(false)
     setCurrentStep(3)
-    
-    if (testTrackMode) {
-      setTtSessionModalOpen(true);
-    } else {
-      setIsRecording(true)
-      setHasRecorded(true) // Add flag when starting normal recording
-    }
+    setIsRecording(true)
   }
 
   // Handle drive summary submission
@@ -438,6 +372,9 @@ export default function Dashboard() {
 
     setDriveSummaryOpen(false)
     setCurrentStep(6)
+
+    // Show uploader modal
+    setUploaderModalOpen(true)
   }
 
   // Handle rerun decision
@@ -473,63 +410,14 @@ export default function Dashboard() {
   }
 
   const stopTtSession = () => {
-    if (ttValidScenario && startTime) {
-      const elapsed = new Date().getTime() - startTime.getTime();
-      if (elapsed < 5 * 60 * 1000) {
-        toast({
-          title: "Session Too Short",
-          description: "At least 5 minutes required for valid repetitions.",
-          variant: "destructive"
-        });
-        return;
-      }
-
-      // Save valid scenario data
-      const durationSec = elapsed / 1000;
-      const summary = {
-        scenario: subtaskScenario,
-        timestamp: startTime.toISOString(),
-        valid: true,
-        duration: durationSec,
-        regulations: subtaskRegulations,
-        technology: subtaskTechnology,
-        overlap: subtaskOverlap,
-        targetSpeed: subtaskTargetSpeed,
-        vutSpeed: subtaskVutSpeed
-      };
-      const existing = JSON.parse(localStorage.getItem("tt-valid-reps") || "[]");
-      existing.push(summary);
-      localStorage.setItem("tt-valid-reps", JSON.stringify(existing));
-    }
-
-    if (!ttValidScenario) {
-      const invalidRep = {
-        timestamp: new Date().toISOString(),
-        scenario: subtaskScenario,
-        status: "invalid"
-      };
-      const existingReps = JSON.parse(localStorage.getItem('tt-invalid-reps') || '[]');
-      existingReps.push(invalidRep);
-      localStorage.setItem('tt-invalid-reps', JSON.stringify(existingReps));
-    }
-
-    // Reset all TT session state and trigger summary
-    setTtSessionModalOpen(false);
-    setTtSessionActive(false);
-    setTtScenarioActive(false);
-    setIsRecording(false);
-    setDriveSummaryOpen(true);
-    setSelectedSubtask("");
-    setStartTime(null);
-
-    sendMqttEvent("session_stop");
-
+    setTtSessionActive(false)
+    setTtScenarioActive(false)
+    sendMqttEvent("session_stop")
     toast({
       title: "TestTrack Session Stopped",
       description: "Session has been ended",
-    });
-};
-
+    })
+  }
 
   const startTtScenario = () => {
     setTtScenarioActive(true)
@@ -566,49 +454,7 @@ export default function Dashboard() {
   }
 
   // Toggle recording state
-  const toggleRecording = async () => {
-    if (testTrackMode) {
-  if (!selectedSubtask) {
-    setSelectedDriver("tt-driver")
-    setSubtaskSelectorOpen(true)
-    return
-  }
-
-  // Start TT session & scenario flow
-  setSelectedDriver("tt-driver")
-  setTtSessionActive(true)
-  setTtScenarioActive(true)
-  sendMqttEvent("session_start")
-  sendMqttEvent("scenario_start")
-  setIsRecording(true)
-  setHasRecorded(true) // Add flag when starting TT recording
-  setStartTime(new Date())
-
-  toast({
-    title: "TestTrack Session Started",
-    description: "Recording scenario...",
-  })
-
-  return
-}
-
-
-    // Example: Fetch disk usage from backend or placeholder
-    const diskUsage = 85; // Replace with real API call
-    if (diskUsage >= 90) {
-      toast({
-        title: "Disk Full",
-        description: "Recording is blocked due to >90% disk usage.",
-        variant: "destructive"
-      });
-      return;
-    } else if (diskUsage >= 80) {
-      toast({
-        title: "High Disk Usage",
-        description: "Disk usage is above 80%. Consider clearing space.",
-        variant: "warning"
-      });
-    }
+  const toggleRecording = () => {
     if (isRecording) {
       setIsRecording(false)
       setCurrentStep(5)
@@ -713,12 +559,6 @@ export default function Dashboard() {
       setUploadInProgress(false)
       setUploadComplete(true)
 
-      // Clear TT repetitions after successful upload
-      localStorage.removeItem("tt-valid-reps");
-      localStorage.removeItem("tt-invalid-reps");
-      setValidTTReps(0);
-      setInvalidTTReps(0);
-
       toast({
         title: "Upload Complete",
         description: `${approvedSessions.length} sessions uploaded successfully`,
@@ -782,19 +622,6 @@ export default function Dashboard() {
       </div>
     </div>
   )
-
-  // 🧠 Load TT repetitions from localStorage only on the client
-  const [validTTReps, setValidTTReps] = useState<number>(0);
-  const [invalidTTReps, setInvalidTTReps] = useState<number>(0);
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const valid = JSON.parse(localStorage.getItem("tt-valid-reps") || "[]");
-      const invalid = JSON.parse(localStorage.getItem("tt-invalid-reps") || "[]");
-      setValidTTReps(valid.length);
-      setInvalidTTReps(invalid.length);
-    }
-  }, []);
 
   return (
     <div className="min-h-screen bg-slate-900 text-white max-w-md mx-auto">
@@ -928,16 +755,6 @@ export default function Dashboard() {
               )}
             </Button>
 
-            {hasRecorded && (
-              <Button
-                variant="outline"
-                className="w-full mt-2 bg-blue-600 hover:bg-blue-700 text-white"
-                onClick={() => setUploaderModalOpen(true)}
-              >
-                📤 End Drive & Approve 
-              </Button>
-            )}
-
             <div className="w-full space-y-3 mt-2">
               <div className="flex items-center space-x-2">
                 <Checkbox
@@ -992,18 +809,6 @@ export default function Dashboard() {
               <ValidationItem name="Frames" isValid={framesValid} icon={<Camera className="h-4 w-4 text-gray-400" />} />
               <ValidationItem name="Radars" isValid={radarsValid} icon={<Radio className="h-4 w-4 text-gray-400" />} />
             </div>
-            {testTrackMode && (validTTReps > 0 || invalidTTReps > 0) && (
-              <>
-                <div className="flex items-center justify-between px-3 text-sm text-green-400">
-                  <Check className="h-3 w-3 mr-1" />
-                  {validTTReps} valid repetitions
-                </div>
-                <div className="flex items-center justify-between px-3 text-sm text-red-400">
-                  <X className="h-3 w-3 mr-1" />
-                  {invalidTTReps} invalid repetitions
-                </div>
-              </>
-            )}
           </CardContent>
         </Card>
       </main>
@@ -1113,7 +918,7 @@ export default function Dashboard() {
                       <SelectValue placeholder="Select a subtask" />
                     </SelectTrigger>
                     <SelectContent>
-                      {filteredSubtasks.map((subtask) => (
+                      {existingSubtasks.map((subtask) => (
                         <SelectItem key={subtask.id} value={subtask.id}>
                           {subtask.summary} ({subtask.type}, {subtask.amountNeeded} needed)
                         </SelectItem>
@@ -1396,118 +1201,57 @@ export default function Dashboard() {
             <DialogDescription>Configure and control your TestTrack session</DialogDescription>
           </DialogHeader>
 
-          <Tabs defaultValue="controls" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 mb-2">
-              <TabsTrigger value="controls">Controls</TabsTrigger>
-              <TabsTrigger value="summary">Summary</TabsTrigger>
-            </TabsList>
+          <div className="py-4 space-y-4">
+            <div className="flex flex-col gap-4">
+              {!ttSessionActive ? (
+                <Button onClick={startTtSession} className="bg-green-600 hover:bg-green-700">
+                  Start Session
+                </Button>
+              ) : (
+                <Button onClick={stopTtSession} className="bg-red-600 hover:bg-red-700">
+                  Stop Session
+                </Button>
+              )}
 
-            <TabsContent value="controls" className="space-y-4">
-              <div className="flex flex-col gap-4">
-                {/* Existing controls content */}
-                {!ttSessionActive ? (
-                  <Button onClick={startTtSession} className="bg-green-600 hover:bg-green-700">
-                    Start Session
-                  </Button>
-                ) : (
-                  <Button onClick={stopTtSession} className="bg-red-600 hover:bg-red-700">
-                    Stop Session
-                  </Button>
-                )}
-
-                {ttSessionActive && (
-                  <>
-                    <div className="border-t border-slate-700 pt-4">
-                      {!ttScenarioActive ? (
-                        <Button onClick={startTtScenario} className="w-full bg-blue-600 hover:bg-blue-700">
-                          Start Scenario
-                        </Button>
-                      ) : (
-                        <Button onClick={stopTtScenario} className="w-full bg-orange-600 hover:bg-orange-700">
-                          Stop Scenario
-                        </Button>
-                      )}
-                    </div>
-
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id="validScenario"
-                        checked={ttValidScenario}
-                        onCheckedChange={(checked) => setTtValidScenario(checked as boolean)}
-                        disabled={!ttSessionActive}
-                      />
-                      <label htmlFor="validScenario" className="text-sm font-medium leading-none">
-                        Valid Scenario
-                      </label>
-                    </div>
-
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span>Collected Scenarios:</span>
-                        <span>
-                          {ttCollectedScenarios} / {ttTotalScenarios}
-                        </span>
-                      </div>
-                      <Progress value={(ttCollectedScenarios / ttTotalScenarios) * 100} className="h-2" />
-                    </div>
-                  </>
-                )}
-              </div>
-            </TabsContent>
-
-            <TabsContent value="summary" className="space-y-4">
-              {/* Valid Repetitions */}
-              {(() => {
-                const validTT = JSON.parse(localStorage.getItem("tt-valid-reps") || "[]");
-                const invalidTT = JSON.parse(localStorage.getItem("tt-invalid-reps") || "[]");
-                
-                return (
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <h3 className="text-sm font-medium flex items-center gap-2">
-                        <CheckCircle className="h-4 w-4 text-green-500" />
-                        Valid Repetitions ({validTT.length})
-                      </h3>
-                      <div className="space-y-2 max-h-[200px] overflow-y-auto">
-                        {validTT.map((rep: any, i: number) => (
-                          <div key={i} className="p-2 bg-slate-800 rounded-lg text-xs space-y-1">
-                            <div className="flex justify-between text-gray-400">
-                              <span>{new Date(rep.timestamp).toLocaleString()}</span>
-                              <span>{Math.round(rep.duration)}s</span>
-                            </div>
-                            <div className="font-medium">{rep.scenario}</div>
-                            <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-gray-400">
-                              <div>Speed: {rep.targetSpeed}km/h</div>
-                              <div>VUT: {rep.vutSpeed}km/h</div>
-                              <div>Tech: {rep.technology}</div>
-                              <div>Overlap: {rep.overlap}</div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <h3 className="text-sm font-medium flex items-center gap-2">
-                        <X className="h-4 w-4 text-red-500" />
-                        Invalid Repetitions ({invalidTT.length})
-                      </h3>
-                      <div className="space-y-2 max-h-[200px] overflow-y-auto">
-                        {invalidTT.map((rep: any, i: number) => (
-                          <div key={i} className="p-2 bg-slate-800 rounded-lg text-xs">
-                            <div className="flex justify-between text-gray-400">
-                              <span>{new Date(rep.timestamp).toLocaleString()}</span>
-                              <span>{rep.scenario}</span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
+              {ttSessionActive && (
+                <>
+                  <div className="border-t border-slate-700 pt-4">
+                    {!ttScenarioActive ? (
+                      <Button onClick={startTtScenario} className="w-full bg-blue-600 hover:bg-blue-700">
+                        Start Scenario
+                      </Button>
+                    ) : (
+                      <Button onClick={stopTtScenario} className="w-full bg-orange-600 hover:bg-orange-700">
+                        Stop Scenario
+                      </Button>
+                    )}
                   </div>
-                );
-              })()}
-            </TabsContent>
-          </Tabs>
+
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="validScenario"
+                      checked={ttValidScenario}
+                      onCheckedChange={(checked) => setTtValidScenario(checked as boolean)}
+                      disabled={!ttSessionActive}
+                    />
+                    <label htmlFor="validScenario" className="text-sm font-medium leading-none">
+                      Valid Scenario
+                    </label>
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span>Collected Scenarios:</span>
+                      <span>
+                        {ttCollectedScenarios} / {ttTotalScenarios}
+                      </span>
+                    </div>
+                    <Progress value={(ttCollectedScenarios / ttTotalScenarios) * 100} className="h-2" />
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
 
           <DialogFooter className="sm:justify-end">
             <Button type="button" variant="outline" onClick={() => setTtSessionModalOpen(false)}>
@@ -1747,21 +1491,21 @@ export default function Dashboard() {
                     </CardFooter>
                   </Card>
                 ))}
-
-                <DialogFooter className="sticky bottom-0 pt-4 bg-background border-t border-slate-700">
-                  {uploadInProgress ? (
-                    <Button disabled className="w-full">
-                      <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-slate-400 border-t-white"></span>
-                      Uploading...
-                    </Button>
-                  ) : (
-                    <Button type="button" className="w-full" disabled={!anySessionApproved} onClick={uploadSessions}>
-                      <UploadCloud className="mr-2 h-4 w-4" />
-                      Upload Selected Sessions
-                    </Button>
-                  )}
-                </DialogFooter>
               </div>
+
+              <DialogFooter className="sticky bottom-0 pt-4 bg-background border-t border-slate-700">
+                {uploadInProgress ? (
+                  <Button disabled className="w-full">
+                    <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-slate-400 border-t-white"></span>
+                    Uploading...
+                  </Button>
+                ) : (
+                  <Button type="button" className="w-full" disabled={!anySessionApproved} onClick={uploadSessions}>
+                    <UploadCloud className="mr-2 h-4 w-4" />
+                    Upload Selected Sessions
+                  </Button>
+                )}
+              </DialogFooter>
             </>
           )}
         </DialogContent>
