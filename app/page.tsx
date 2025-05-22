@@ -1457,7 +1457,7 @@ export default function Dashboard() {
 
             <TabsContent value="summary" className="space-y-4">
               {/* Valid Repetitions */}
-              {(() => {
+              {typeof window !== "undefined" && (() => {
                 const validTT = JSON.parse(localStorage.getItem("tt-valid-reps") || "[]");
                 const invalidTT = JSON.parse(localStorage.getItem("tt-invalid-reps") || "[]");
                 
