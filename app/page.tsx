@@ -606,7 +606,7 @@ export default function Dashboard() {
       toast({
         title: "High Disk Usage",
         description: "Disk usage is above 80%. Consider clearing space.",
-        variant: "warning"
+        variant: "default"
       });
     }
     if (isRecording) {
