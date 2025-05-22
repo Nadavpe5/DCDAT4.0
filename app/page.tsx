@@ -23,6 +23,7 @@ import {
   Camera,
   Radio,
   RotateCcw,
+  FileCheck2,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
@@ -930,11 +931,11 @@ export default function Dashboard() {
 
             {hasRecorded && (
               <Button
-                variant="outline"
-                className="w-full mt-2 bg-blue-600 hover:bg-blue-700 text-white"
                 onClick={() => setUploaderModalOpen(true)}
+                className="w-full mt-4 px-6 py-5 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-sm font-semibold shadow-lg transition-all"
               >
-                📤 End Drive & Approve 
+                <FileCheck2 className="w-4 h-4 mr-2" />
+                End Drive & Approve
               </Button>
             )}
 
