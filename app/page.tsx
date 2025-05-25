@@ -932,7 +932,13 @@ export default function Dashboard() {
             {hasRecorded && (
               <Button
                 onClick={() => setUploaderModalOpen(true)}
-                className="w-full mt-4 px-6 py-5 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-sm font-semibold shadow-lg transition-all"
+                disabled={isRecording}
+                className={cn(
+                  "w-full mt-4 px-6 py-5 rounded-2xl text-white text-sm font-semibold shadow-lg transition-all",
+                  isRecording
+                    ? "bg-gradient-to-r from-slate-500 to-slate-600 opacity-60 cursor-not-allowed"
+                    : "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+                )}
               >
                 <FileCheck2 className="w-4 h-4 mr-2" />
                 End Drive & Approve
