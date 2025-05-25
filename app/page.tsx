@@ -569,30 +569,35 @@ export default function Dashboard() {
   // Toggle recording state
   const toggleRecording = async () => {
     if (testTrackMode) {
-  if (!selectedSubtask) {
-    setSelectedDriver("tt-driver")
-    setSubtaskSelectorOpen(true)
-    return
-  }
+      if (!selectedSubtask) {
+        setSelectedDriver("tt-driver")
+        setSubtaskSelectorOpen(true)
+        return
+      }
 
-  // Start TT session & scenario flow
-  setSelectedDriver("tt-driver")
-  setTtSessionActive(true)
-  setTtScenarioActive(true)
-  sendMqttEvent("session_start")
-  sendMqttEvent("scenario_start")
-  setIsRecording(true)
-  setHasRecorded(true) // Add flag when starting TT recording
-  setStartTime(new Date())
+      if (!isRecording) {
+        // Start recording + session
+        setTtSessionActive(true)
+        setTtScenarioActive(false) // Reset scenario state
+        setTtValidScenario(false)
+        sendMqttEvent("session_start")
+      } else {
+        // Stop recording + session
+        setTtSessionActive(false)
+        setTtScenarioActive(false)
+        sendMqttEvent("session_stop")
+      }
+      setIsRecording(!isRecording)
+      setHasRecorded(true)
+      setStartTime(!isRecording ? new Date() : null)
 
-  toast({
-    title: "TestTrack Session Started",
-    description: "Recording scenario...",
-  })
+      toast({
+        title: !isRecording ? "TestTrack Session Started" : "TestTrack Session Stopped",
+        description: !isRecording ? "Ready to record scenarios" : "Session ended",
+      })
 
-  return
-}
-
+      return
+    }
 
     // Example: Fetch disk usage from backend or placeholder
     const diskUsage = 85; // Replace with real API call
@@ -1411,54 +1416,43 @@ export default function Dashboard() {
 
             <TabsContent value="controls" className="space-y-4">
               <div className="flex flex-col gap-4">
-                {/* Existing controls content */}
-                {!ttSessionActive ? (
-                  <Button onClick={startTtSession} className="bg-green-600 hover:bg-green-700">
-                    Start Session
-                  </Button>
-                ) : (
-                  <Button onClick={stopTtSession} className="bg-red-600 hover:bg-red-700">
-                    Stop Session
-                  </Button>
-                )}
+                <Button
+                  onClick={startTtScenario}
+                  disabled={!isRecording || ttScenarioActive}
+                  className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
+                >
+                  Start Scenario
+                </Button>
 
-                {ttSessionActive && (
-                  <>
-                    <div className="border-t border-slate-700 pt-4">
-                      {!ttScenarioActive ? (
-                        <Button onClick={startTtScenario} className="w-full bg-blue-600 hover:bg-blue-700">
-                          Start Scenario
-                        </Button>
-                      ) : (
-                        <Button onClick={stopTtScenario} className="w-full bg-orange-600 hover:bg-orange-700">
-                          Stop Scenario
-                        </Button>
-                      )}
-                    </div>
+                <Button
+                  onClick={stopTtScenario}
+                  disabled={!isRecording || !ttScenarioActive}
+                  className="w-full bg-orange-600 hover:bg-orange-700 disabled:opacity-50"
+                >
+                  Stop Scenario
+                </Button>
 
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id="validScenario"
-                        checked={ttValidScenario}
-                        onCheckedChange={(checked) => setTtValidScenario(checked as boolean)}
-                        disabled={!ttSessionActive}
-                      />
-                      <label htmlFor="validScenario" className="text-sm font-medium leading-none">
-                        Valid Scenario
-                      </label>
-                    </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="validScenario"
+                    checked={ttValidScenario}
+                    onCheckedChange={(checked) => setTtValidScenario(checked as boolean)}
+                    disabled={!ttSessionActive}
+                  />
+                  <label htmlFor="validScenario" className="text-sm font-medium leading-none">
+                    Valid Scenario
+                  </label>
+                </div>
 
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span>Collected Scenarios:</span>
-                        <span>
-                          {ttCollectedScenarios} / {ttTotalScenarios}
-                        </span>
-                      </div>
-                      <Progress value={(ttCollectedScenarios / ttTotalScenarios) * 100} className="h-2" />
-                    </div>
-                  </>
-                )}
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span>Collected Scenarios:</span>
+                    <span>
+                      {ttCollectedScenarios} / {ttTotalScenarios}
+                    </span>
+                  </div>
+                  <Progress value={(ttCollectedScenarios / ttTotalScenarios) * 100} className="h-2" />
+                </div>
               </div>
             </TabsContent>
 
@@ -1783,9 +1777,12 @@ export default function Dashboard() {
               TestTrack Session Active
               {ttScenarioActive && <Badge className="bg-orange-600">Recording Scenario</Badge>}
             </AlertTitle>
-            <AlertDescription className="flex justify-between items-center">
+            <AlertDescription className="flex justify-between items-center gap-2">
               <span>
-                {ttCollectedScenarios} of {ttTotalScenarios} scenarios collected
+                {ttCollectedScenarios} / {ttTotalScenarios} scenarios ({Math.floor((ttCollectedScenarios / ttTotalScenarios) * 100)}%)
+              </span>
+              <span className="text-xs text-blue-300">
+                {existingSubtasks.find((s) => s.id === selectedSubtask)?.summary ?? "Unknown"}
               </span>
               <Button
                 variant="outline"
