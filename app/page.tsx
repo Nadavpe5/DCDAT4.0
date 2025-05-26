@@ -24,6 +24,7 @@ import {
   Radio,
   RotateCcw,
   FileCheck2,
+  HardDriveDownload,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
@@ -1521,28 +1522,37 @@ export default function Dashboard() {
       {/* Session Uploader Modal (Step 6) */}
       <Dialog open={uploaderModalOpen} onOpenChange={setUploaderModalOpen}>
         <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Approve Sessions for Upload</DialogTitle>
-            <DialogDescription>Review and approve completed sessions</DialogDescription>
-          </DialogHeader>
-
           {uploadComplete ? (
-            <div className="py-8 flex flex-col items-center justify-center space-y-4">
-              <div className="bg-green-900/30 p-4 rounded-full">
-                <CheckCircle className="h-12 w-12 text-green-500" />
+            <>
+              <DialogHeader>
+                <DialogTitle>Session Review Complete</DialogTitle>
+                <DialogDescription>All recorded sessions have been reviewed successfully.</DialogDescription>
+              </DialogHeader>
+
+              <div className="py-8 flex flex-col items-center justify-center space-y-4">
+                <div className="bg-green-900/30 p-4 rounded-full">
+                  <CheckCircle className="h-12 w-12 text-green-500" />
+                </div>
+                <h3 className="text-xl font-semibold text-center">Review Complete</h3>
+                <p className="text-center text-gray-400">
+                  All sessions have been reviewed. The hard drive can now be removed.
+                </p>
+                <Alert className="bg-blue-900/30 border-blue-800 mt-4">
+                  <AlertCircle className="h-4 w-4 text-blue-500" />
+                  <AlertTitle>Next Steps</AlertTitle>
+                  <AlertDescription className="text-blue-300">Insert HD at Copy Station</AlertDescription>
+                </Alert>
               </div>
-              <h3 className="text-xl font-semibold text-center">Upload Complete</h3>
-              <p className="text-center text-gray-400">
-                All approved sessions have been successfully uploaded to the central server.
-              </p>
-              <Alert className="bg-blue-900/30 border-blue-800 mt-4">
-                <AlertCircle className="h-4 w-4 text-blue-500" />
-                <AlertTitle>Next Steps</AlertTitle>
-                <AlertDescription className="text-blue-300">Insert HD at Central Station</AlertDescription>
-              </Alert>
-            </div>
+            </>
           ) : (
             <>
+              <DialogHeader>
+                <DialogTitle>Review Sessions for Copy Station</DialogTitle>
+                <DialogDescription>
+                  Confirm reviewed sessions before removing the hard disk.
+                </DialogDescription>
+              </DialogHeader>
+
               <div className="py-4 space-y-4">
                 {sessionData.map((session) => (
                   <Card
@@ -1753,12 +1763,19 @@ export default function Dashboard() {
                   {uploadInProgress ? (
                     <Button disabled className="w-full">
                       <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-slate-400 border-t-white"></span>
-                      Uploading...
+                      Reviewing...
                     </Button>
                   ) : (
-                    <Button type="button" className="w-full" disabled={!anySessionApproved} onClick={uploadSessions}>
-                      <UploadCloud className="mr-2 h-4 w-4" />
-                      Upload Selected Sessions
+                    <Button
+                      type="button"
+                      className="w-full"
+                      disabled={!anySessionApproved}
+                      onClick={() => {
+                        setUploadComplete(true);
+                      }}
+                    >
+                      <HardDriveDownload className="mr-2 h-4 w-4" />
+                      Finalize Review & Eject HD
                     </Button>
                   )}
                 </DialogFooter>
