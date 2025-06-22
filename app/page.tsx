@@ -9,6 +9,7 @@ import {
   ChevronDown,
   Compass,
   Cpu,
+  Zap,
   Database,
   Edit,
   HardDrive,
@@ -25,6 +26,12 @@ import {
   RotateCcw,
   FileCheck2,
   HardDriveDownload,
+  Terminal,
+  Eye,
+  BugPlay,
+  ServerOff,
+  RefreshCw,
+  ScanBarcode,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
@@ -51,6 +58,7 @@ import { toast } from "@/components/ui/use-toast"
 import { Toaster } from "@/components/ui/toaster"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import type React from "react"
+
 
 // Sample data for drivers
 const drivers = [
@@ -206,15 +214,18 @@ const completedSessions = [
 ]
 
 export default function Dashboard() {
-  // Main app states
-  const [isRecording, setIsRecording] = useState(false)
-  const [hasRecorded, setHasRecorded] = useState(false)
-  const [insChecked, setInsChecked] = useState(true)
-  const [velodyneChecked, setVelodyneChecked] = useState(true)
-  const [testTrackMode, setTestTrackMode] = useState(false)
-  const [time, setTime] = useState("00:00:00")
-  const [timerInterval, setTimerInterval] = useState<NodeJS.Timeout | null>(null)
-  const [startTime, setStartTime] = useState<Date | null>(null)
+  const [showLoggingModal, setShowLoggingModal] = useState(false);
+  const openLoggingModal  = () => setShowLoggingModal(true);
+  const closeLoggingModal = () => setShowLoggingModal(false);
+
+  const [isRecording, setIsRecording]             = useState(false);
+  const [hasRecorded, setHasRecorded]             = useState(false);
+  const [insChecked, setInsChecked]               = useState(true);
+  const [velodyneChecked, setVelodyneChecked]     = useState(true);
+  const [testTrackMode, setTestTrackMode]         = useState(false);
+  const [time, setTime]                           = useState("00:00:00");
+  const [timerInterval, setTimerInterval]         = useState<NodeJS.Timeout | null>(null);
+  const [startTime, setStartTime]                 = useState<Date | null>(null);
 
   // Validation states
   const [gpsValid, setGpsValid] = useState(true)
@@ -751,19 +762,6 @@ export default function Dashboard() {
     </div>
   )
 
-  const ResourceBar = ({ name, value, icon }: { name: string; value: number; icon: React.ReactNode }) => (
-    <div className="flex flex-col gap-1">
-      <div className="flex justify-between items-center">
-        <div className="flex items-center gap-1.5">
-          {icon}
-          <span className="text-xs text-gray-400">{name}</span>
-        </div>
-        <span className="text-xs text-gray-400">{value}%</span>
-      </div>
-      <Progress value={value} className="h-1.5" />
-    </div>
-  )
-
   const ValidationItem = ({
     name,
     isValid = true,
@@ -805,48 +803,72 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-slate-900 text-white max-w-md mx-auto">
-      {/* Top Bar */}
+      {/* ---------------------------- TOP BAR ---------------------------- */}
       <header className="bg-slate-800 p-4 border-b border-slate-700 shadow-md rounded-b-2xl">
-        <div className="flex justify-between items-center mb-4">
-          <div className="flex items-center gap-3">
-            <div className="relative h-[40px] w-[120px]">
-              <Image
-                src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/logo%20white-2jJx8ENUtxYrfB2ByeJwe5S0DTajSr.png"
-                alt="Mobileye Logo"
-                fill
-                className="object-contain object-left"
-                priority
-              />
-            </div>
-            <h1 className="text-lg font-bold whitespace-nowrap">DC DAT 4.0</h1>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-gray-300">TestTrack Mode</span>
-            <Switch
-              checked={testTrackMode}
-              onCheckedChange={setTestTrackMode}
-              className="data-[state=checked]:bg-green-500"
-            />
-          </div>
+      <div className="flex justify-between items-center mb-4">
+        {/* Logo + Title */}
+        <div className="flex items-center gap-3">
+        <div className="relative h-[40px] w-[120px]">
+          <Image
+          src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/logo%20white-2jJx8ENUtxYrfB2ByeJwe5S0DTajSr.png"
+          alt="Mobileye Logo"
+          fill
+          className="object-contain object-left"
+          priority
+          />
+        </div>
+        <h1 className="text-lg font-bold whitespace-nowrap">DC DAT 4.0</h1>
         </div>
 
-        <div className="flex flex-col gap-4">
-          <div className="flex flex-wrap gap-2 justify-between">
-            <SystemStatusIndicator name="Orchestrator" />
-            <SystemStatusIndicator name="Ruler" />
-            <SystemStatusIndicator name="Logger" />
-            <SystemStatusIndicator name="MQTT" />
-            <SystemStatusIndicator name="GTLogging" />
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <ResourceBar name="CPU" value={12} icon={<Cpu className="h-3 w-3 text-gray-400" />} />
-            <ResourceBar name="Memory" value={34} icon={<Database className="h-3 w-3 text-gray-400" />} />
-            <ResourceBar name="Disk" value={56} icon={<HardDrive className="h-3 w-3 text-gray-400" />} />
-            <ResourceBar name="Network" value={23} icon={<Network className="h-3 w-3 text-gray-400" />} />
-          </div>
+        {/* TestTrack switch */}
+        <div className="flex items-center gap-2">
+        <span className="text-xs text-gray-300">TestTrack Mode</span>
+        <Switch
+          checked={testTrackMode}
+          onCheckedChange={setTestTrackMode}
+          className="data-[state=checked]:bg-green-500"
+        />
         </div>
+      </div>
+
+      <div className="flex flex-col gap-4">
+        {/* Removed SystemStatusIndicator from here */}
+
+        {/* --- Devices Online/Offline panel --- */}
+        <div className="mt-4 grid grid-cols-3 gap-4 text-sm text-muted-foreground">
+        {/* Logger */}
+        <div className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-muted/10">
+          <Cpu className="h-4 w-4 text-gray-400" />
+          <span>Logger</span>
+          <span
+          className={`ml-auto w-2.5 h-2.5 rounded-full ${
+            true ? "bg-green-500" : "bg-red-500"
+          }`}
+          />
+        </div>
+        {/* EPM */}
+        <div className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-muted/10">
+          <Zap className="h-4 w-4 text-gray-400" />
+          <span>EPM</span>
+          <span
+          className={`ml-auto w-2.5 h-2.5 rounded-full ${
+            false ? "bg-green-500" : "bg-red-500"
+          }`}
+          />
+        </div>
+        {/*  Disk */}
+        <div className="flex flex-col px-3 py-2 rounded-lg bg-muted/10">
+          <span className="flex items-center gap-1 mb-1">
+          <HardDrive className="h-4 w-4 text-gray-400" />
+           Disk
+          </span>
+          <div className="w-full bg-muted h-2 rounded">
+          <div className="h-2 bg-blue-500 rounded" style={{ width: "56%" }} />
+          </div>
+          <span className="text-xs mt-1 text-right text-muted-foreground">56%</span>
+        </div>
+        </div>
+      </div>
       </header>
 
       {/* Main Content */}
@@ -1019,6 +1041,14 @@ export default function Dashboard() {
             )}
           </CardContent>
         </Card>
+
+        {/* Logging Mode Toggle Button (moved here) */}
+        <Button variant="secondary" onClick={openLoggingModal} className="mt-2">
+          <BugPlay className="w-4 h-4 mr-1" />
+          Logging Mode
+        </Button>
+
+        {/* ...existing code... */}
       </main>
 
       {/* Driver Picker Modal (Step 1) */}
@@ -1784,6 +1814,105 @@ export default function Dashboard() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Logging Mode UI with deep debug features */}
+      {showLoggingModal && (
+        <Dialog open={showLoggingModal} onOpenChange={closeLoggingModal}>
+          <DialogContent className="max-w-5xl h-[90vh] overflow-y-auto p-6 bg-background shadow-xl rounded-xl">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-lg font-semibold">
+                <Terminal className="w-5 h-5 text-muted-foreground" />
+                Integration Debug Mode
+              </DialogTitle>
+              <DialogDescription>
+                Access live system logs, diagnostics, and component-level debug actions
+              </DialogDescription>
+            </DialogHeader>
+
+            {/* 🖥️ Terminal Section */}
+            <div className="mb-4">
+              <h4 className="text-sm font-medium flex items-center gap-1 text-muted-foreground">
+                <Cpu className="w-4 h-4" />
+                Logger Output Console
+              </h4>
+              <div className="bg-black text-green-400 text-xs font-mono p-3 rounded h-40 overflow-y-auto mt-2">
+                {"<==== Running the Docker ====>\nLogger is Alive!\nSending launch logger request... DONE\nReady to run session."}
+              </div>
+            </div>
+
+            {/* 🧪 Debug Buttons */}
+            <div className="grid grid-cols-3 md:grid-cols-4 gap-3 mt-4">
+              <Button variant="secondary">
+                <ServerOff className="w-4 h-4 mr-1" />
+                Power Off
+              </Button>
+              <Button variant="secondary">
+                <Cpu className="w-4 h-4 mr-1" />
+                Health Check
+              </Button>
+              <Button variant="secondary">
+                <Save className="w-4 h-4 mr-1" />
+                Save GT
+              </Button>
+              <Button variant="secondary">
+                <HardDriveDownload className="w-4 h-4 mr-1" />
+                Mirror Disk
+              </Button>
+              <Button variant="secondary">
+                <RefreshCw className="w-4 h-4 mr-1" />
+                Restart Docker
+              </Button>
+              <Button variant="secondary">
+                <ScanBarcode className="w-4 h-4 mr-1" />
+                Generate QR
+              </Button>
+              <Button variant="destructive">
+                <Save className="w-4 h-4 mr-1" />
+                Clear GT
+              </Button>
+            </div>
+
+            {/* 🔍 TAPI + Camera System Diagnostics */}
+            <div className="grid grid-cols-2 gap-6 mt-6">
+              {/* 📊 TAPI Table */}
+              <div>
+                <h4 className="text-sm font-medium mb-2 flex items-center gap-1 text-muted-foreground">
+                  <Eye className="w-4 h-4" />
+                  TAPI Diagnostics
+                </h4>
+                <div className="rounded border bg-muted/10 p-2 text-sm text-gray-300">
+                  <div className="py-1">TapiDrop: 0%</div>
+                  <div className="py-1">RadarDrop: 0%</div>
+                  <div className="py-1">LidarDrop: 1%</div>
+                  <div className="py-1">BrainDrop: 0%</div>
+                  <div className="py-1">ImageDrop: 0%</div>
+                </div>
+              </div>
+
+              {/* 📷 Camera Attachments */}
+              <div>
+                <h4 className="text-sm font-medium mb-2 flex items-center gap-1 text-muted-foreground">
+                  <Camera className="w-4 h-4" />
+                  Connected Cameras
+                </h4>
+                <ul className="space-y-1 text-sm">
+                  {[
+                    'Main',
+                    'Rear',
+                    'FrontCornerLeft',
+                    'FrontCornerRight',
+                    'ParkingFront_Right',
+                    'ParkingFront_Left',
+                    'Narrow'
+                  ].map((cam) => (
+                    <li key={cam} className="flex items-center gap-1">📷 {cam}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
 
       {/* Sticky TestTrack Session Status */}
       {testTrackMode && ttSessionActive && (
