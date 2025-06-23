@@ -1,24 +1,18 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import Image from "next/image"
+import { useState, useEffect, useCallback } from "react"
 import {
   AlertCircle,
   Car,
   CheckCircle,
   ChevronDown,
-  Compass,
   Cpu,
   Zap,
   Database,
   Edit,
   HardDrive,
   Map,
-  Minus,
-  Network,
-  Plus,
   Save,
-  UploadCloud,
   X,
   Check,
   Camera,
@@ -32,6 +26,13 @@ import {
   ServerOff,
   RefreshCw,
   ScanBarcode,
+  Satellite,
+  Radar,
+  Activity,
+  Wifi,
+  Shield,
+  CircuitBoard,
+  Gauge,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
@@ -47,16 +48,19 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Progress } from "@/components/ui/progress"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
-import { toast } from "@/components/ui/use-toast"
+import { useToast } from "@/components/ui/use-toast"
 import { Toaster } from "@/components/ui/toaster"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+{/* RadarDisplay and MapModal imports removed */}
+import { ToggleControls } from "@/components/toggle-controls"
+import { SensorButtons } from "@/components/sensor-buttons"
 import type React from "react"
 
 
@@ -214,25 +218,44 @@ const completedSessions = [
 ]
 
 export default function Dashboard() {
-  const [showLoggingModal, setShowLoggingModal] = useState(false);
-  const openLoggingModal  = () => setShowLoggingModal(true);
-  const closeLoggingModal = () => setShowLoggingModal(false);
+  const { toast } = useToast()
+  // State management
+  const [time, setTime] = useState("00:00:00")
+  const [isRecording, setIsRecording] = useState(false)
+  const [hasRecorded, setHasRecorded] = useState(false)
+  const [selectedDriver, setSelectedDriver] = useState<string>("")
+  const [selectedSubtask, setSelectedSubtask] = useState<string>("")
+  const [subtaskSummary, setSubtaskSummary] = useState("")
+  const [subtaskType, setSubtaskType] = useState("Driving")
+  const [showLoggingModal, setShowLoggingModal] = useState(false)
+  
+  // Enhanced Disk Usage State
+  const [diskUsage, setDiskUsage] = useState(7) // Starting at 7 GB as requested
+  const [diskCapacity] = useState(100) // 100 GB total capacity
+  const [showCleanupConfirm, setShowCleanupConfirm] = useState(false)
+  const [diskUsageHistory, setDiskUsageHistory] = useState<Array<{time: string, usage: number}>>([])
+  const [recordingStartTime, setRecordingStartTime] = useState<Date | null>(null)
+  const [isDiskEjected, setIsDiskEjected] = useState(false)
+  const [sessionsRecorded, setSessionsRecorded] = useState(0)
 
-  const [isRecording, setIsRecording]             = useState(false);
-  const [hasRecorded, setHasRecorded]             = useState(false);
-  const [insChecked, setInsChecked]               = useState(true);
-  const [velodyneChecked, setVelodyneChecked]     = useState(true);
-  const [testTrackMode, setTestTrackMode]         = useState(false);
-  const [time, setTime]                           = useState("00:00:00");
-  const [timerInterval, setTimerInterval]         = useState<NodeJS.Timeout | null>(null);
-  const [startTime, setStartTime]                 = useState<Date | null>(null);
+  // Modal states (removed unused modal states)
+  const [rerunModalOpen, setRerunModalOpen] = useState(false)
+  const [showMap, setShowMap] = useState(false)
+  const [uploaderModalOpen, setUploaderModalOpen] = useState(false)
+
+  // Additional state variables
+  const [insChecked, setInsChecked] = useState(true)
+  const [velodyneChecked, setVelodyneChecked] = useState(true)
+  const [testTrackMode, setTestTrackMode] = useState(false)
+  const [timerInterval, setTimerInterval] = useState<NodeJS.Timeout | null>(null)
+  const [startTime, setStartTime] = useState<Date | null>(null)
 
   // Validation states
-  const [gpsValid, setGpsValid] = useState(true)
-  const [signalsValid, setSignalsValid] = useState(true)
-  const [gtDataValid, setGtDataValid] = useState(false)
-  const [framesValid, setFramesValid] = useState(true)
-  const [radarsValid, setRadarsValid] = useState(true)
+  const [gpsValid] = useState(true)
+  const [signalsValid] = useState(true)
+  const [gtDataValid] = useState(false)
+  const [framesValid] = useState(true)
+  const [radarsValid] = useState(true)
 
   // TestTrack session states
   const [ttSessionModalOpen, setTtSessionModalOpen] = useState(false)
@@ -240,27 +263,21 @@ export default function Dashboard() {
   const [ttScenarioActive, setTtScenarioActive] = useState(false)
   const [ttValidScenario, setTtValidScenario] = useState(false)
   const [ttCollectedScenarios, setTtCollectedScenarios] = useState(12)
-  const [ttTotalScenarios, setTtTotalScenarios] = useState(20)
+  const [ttTotalScenarios] = useState(20)
 
-  // CAR2DB Flow states
-  const [currentStep, setCurrentStep] = useState(0)
+  // CAR2DB Flow states (removed unused currentStep)
   const [driverPickerOpen, setDriverPickerOpen] = useState(false)
   const [subtaskSelectorOpen, setSubtaskSelectorOpen] = useState(false)
   const [driveSummaryOpen, setDriveSummaryOpen] = useState(false)
-  const [rerunModalOpen, setRerunModalOpen] = useState(false)
   const [isParallelTasks, setIsParallelTasks] = useState(false)
 
   // Driver selection states
-  const [selectedDriver, setSelectedDriver] = useState<string | null>(null)
   const [driverSearchOpen, setDriverSearchOpen] = useState(false)
   const [driverSearch, setDriverSearch] = useState("")
 
   // Subtask states
   const [useExistingSubtask, setUseExistingSubtask] = useState(true)
-  const [selectedSubtask, setSelectedSubtask] = useState("")
-  const [subtaskSummary, setSubtaskSummary] = useState("")
   const [subtaskDescription, setSubtaskDescription] = useState("")
-  const [subtaskType, setSubtaskType] = useState("")
   const [subtaskAmountNeeded, setSubtaskAmountNeeded] = useState(1)
   const [subtaskRequestedEvents, setSubtaskRequestedEvents] = useState("")
 
@@ -280,11 +297,68 @@ export default function Dashboard() {
   const [driveCoPilot, setDriveCoPilot] = useState<string | null>(null)
 
   // Uploader modal states
-  const [uploaderModalOpen, setUploaderModalOpen] = useState(false)
   const [sessionApprovals, setSessionApprovals] = useState<Record<string, boolean>>({})
   const [editingSession, setEditingSession] = useState<string | null>(null)
-  const [uploadInProgress, setUploadInProgress] = useState(false)
+  const [uploadInProgress] = useState(false)
   const [uploadComplete, setUploadComplete] = useState(false)
+
+  // Map modal states
+  const [loggingMode, setLoggingMode] = useState(false)
+  
+  // Helper functions
+  const openLoggingModal = () => setShowLoggingModal(true)
+  const closeLoggingModal = () => setShowLoggingModal(false)
+
+  // Disk usage simulation function
+  const simulateDiskUsageGrowth = useCallback(() => {
+    if (!isRecording) return
+    
+    // If no recording start time, set it now
+    if (!recordingStartTime) {
+      setRecordingStartTime(new Date())
+      return
+    }
+
+    const currentTime = new Date()
+    const elapsedMinutes = (currentTime.getTime() - recordingStartTime.getTime()) / (1000 * 60)
+    
+    // Simulate realistic disk usage growth: ~2.0-3.0 GB per minute of recording
+    const baseGrowthRate = 2.5 // GB per minute (increased from 0.8)
+    const variability = Math.random() * 0.5 - 0.25 // ±0.25 GB variation
+    const growthRate = baseGrowthRate + variability
+    
+    // Ensure we always show some growth, even for very small time intervals
+    const minGrowth = 0.3 // Minimum 0.3 GB growth per update (increased from 0.1)
+    const timeBasedGrowth = elapsedMinutes * growthRate
+    const actualGrowth = Math.max(minGrowth, timeBasedGrowth)
+    
+    // Calculate new usage (starting from 7GB)
+    const newUsage = Math.min(7 + actualGrowth, diskCapacity - 5) // Leave 5GB buffer
+    
+    // Only update if there's actual change
+    if (newUsage > diskUsage) {
+      setDiskUsage(Math.round(newUsage * 10) / 10) // Round to 1 decimal place
+      
+      // Add to history for the mini chart
+      const timeStr = currentTime.toLocaleTimeString()
+      setDiskUsageHistory(prev => {
+        const newHistory = [...prev, { time: timeStr, usage: newUsage }]
+        // Keep only last 20 data points
+        return newHistory.slice(-20)
+      })
+    }
+  }, [isRecording, recordingStartTime, diskUsage, diskCapacity, setDiskUsage, setDiskUsageHistory, setRecordingStartTime])
+
+  // Enhanced disk usage percentage calculation
+  const getDiskUsagePercentage = () => Math.round((diskUsage / diskCapacity) * 100)
+  const getDiskUsageColor = () => {
+    const percentage = getDiskUsagePercentage()
+    if (percentage >= 90) return { color: '#7f1d1d', glow: 'neon-glow-red', text: 'text-red-400' }
+    if (percentage >= 80) return { color: '#9a3412', glow: 'neon-glow-orange', text: 'text-orange-400' }
+    if (percentage >= 60) return { color: '#854d0e', glow: 'neon-glow-yellow', text: 'text-yellow-400' }
+    return { color: '#1e3a8a', glow: 'neon-glow-blue-dark', text: 'text-blue-400' }
+  }
+
   interface SessionMetadata {
     weather: string;
     illumination: string;
@@ -313,6 +387,24 @@ export default function Dashboard() {
       vutSpeed: number;
     } | null;
     ttFieldsComplete: boolean;
+  }
+
+  interface ValidTTRep {
+    scenario: string;
+    timestamp: string;
+    valid: boolean;
+    duration: number;
+    regulations: string;
+    technology: string;
+    overlap: string;
+    targetSpeed: number;
+    vutSpeed: number;
+  }
+
+  interface InvalidTTRep {
+    timestamp: string;
+    scenario: string;
+    status: string;
   }
   
   const [sessionData, setSessionData] = useState<Session[]>(completedSessions)
@@ -392,18 +484,16 @@ export default function Dashboard() {
         clearTimeout(stopTimer);
       };
     }
-  }, [isRecording, startTime])
+  }, [isRecording, startTime, toast, setIsRecording, setDriveSummaryOpen])
 
   // Start the CAR2DB flow
   const startRecordingFlow = () => {
-    setCurrentStep(1)
     setDriverPickerOpen(true)
   }
 
   // Handle driver selection
   const handleDriverSelected = () => {
     setDriverPickerOpen(false)
-    setCurrentStep(2)
     setSubtaskSelectorOpen(true)
   }
 
@@ -427,7 +517,6 @@ export default function Dashboard() {
     })
 
     setSubtaskSelectorOpen(false)
-    setCurrentStep(3)
     
     if (testTrackMode) {
       setTtSessionModalOpen(true);
@@ -449,8 +538,10 @@ export default function Dashboard() {
       coPilot: driveCoPilot,
     })
 
+    // Increment sessions recorded counter
+    setSessionsRecorded(prev => prev + 1)
+
     setDriveSummaryOpen(false)
-    setCurrentStep(6)
   }
 
   // Handle rerun decision
@@ -468,80 +559,79 @@ export default function Dashboard() {
         setDriveCoPilot(subtask.metadata.coPilot)
       }
       setIsRecording(true)
-      setCurrentStep(3)
     } else {
       // Start fresh
       startRecordingFlow()
     }
   }
 
-  // TestTrack session management
-  const startTtSession = () => {
-    setTtSessionActive(true)
-    sendMqttEvent("session_start")
-    toast({
-      title: "TestTrack Session Started",
-      description: "Session is now active",
-    })
-  }
+  // TestTrack session management (legacy functions - commented out)
+  // const startTtSession = () => {
+  //   setTtSessionActive(true)
+  //   sendMqttEvent("session_start")
+  //   toast({
+  //     title: "TestTrack Session Started",
+  //     description: "Session is now active",
+  //   })
+  // }
 
-  const stopTtSession = () => {
-    if (ttValidScenario && startTime) {
-      const elapsed = new Date().getTime() - startTime.getTime();
-      if (elapsed < 5 * 60 * 1000) {
-        toast({
-          title: "Session Too Short",
-          description: "At least 5 minutes required for valid repetitions.",
-          variant: "destructive"
-        });
-        return;
-      }
+  // const stopTtSession = () => {
+  //   if (ttValidScenario && startTime) {
+  //     const elapsed = new Date().getTime() - startTime.getTime();
+  //     if (elapsed < 5 * 60 * 1000) {
+  //       toast({
+  //         title: "Session Too Short",
+  //         description: "At least 5 minutes required for valid repetitions.",
+  //         variant: "destructive"
+  //       });
+  //       return;
+  //     }
 
-      // Save valid scenario data
-      const durationSec = elapsed / 1000;
-      const summary = {
-        scenario: subtaskScenario,
-        timestamp: startTime.toISOString(),
-        valid: true,
-        duration: durationSec,
-        regulations: subtaskRegulations,
-        technology: subtaskTechnology,
-        overlap: subtaskOverlap,
-        targetSpeed: subtaskTargetSpeed,
-        vutSpeed: subtaskVutSpeed
-      };
-      const existing = JSON.parse(localStorage.getItem("tt-valid-reps") || "[]");
-      existing.push(summary);
-      localStorage.setItem("tt-valid-reps", JSON.stringify(existing));
-    }
+  //     // Save valid scenario data
+  //     const durationSec = elapsed / 1000;
+  //     const summary = {
+  //       scenario: subtaskScenario,
+  //       timestamp: startTime.toISOString(),
+  //       valid: true,
+  //       duration: durationSec,
+  //       regulations: subtaskRegulations,
+  //       technology: subtaskTechnology,
+  //       overlap: subtaskOverlap,
+  //       targetSpeed: subtaskTargetSpeed,
+  //       vutSpeed: subtaskVutSpeed
+  //     };
+  //     const existing = JSON.parse(localStorage.getItem("tt-valid-reps") || "[]");
+  //     existing.push(summary);
+  //     localStorage.setItem("tt-valid-reps", JSON.stringify(existing));
+  //   }
 
-    if (!ttValidScenario) {
-      const invalidRep = {
-        timestamp: new Date().toISOString(),
-        scenario: subtaskScenario,
-        status: "invalid"
-      };
-      const existingReps = JSON.parse(localStorage.getItem('tt-invalid-reps') || '[]');
-      existingReps.push(invalidRep);
-      localStorage.setItem('tt-invalid-reps', JSON.stringify(existingReps));
-    }
+  //   if (!ttValidScenario) {
+  //     const invalidRep = {
+  //       timestamp: new Date().toISOString(),
+  //       scenario: subtaskScenario,
+  //       status: "invalid"
+  //     };
+  //     const existingReps = JSON.parse(localStorage.getItem('tt-invalid-reps') || '[]');
+  //     existingReps.push(invalidRep);
+  //     localStorage.setItem('tt-invalid-reps', JSON.stringify(existingReps));
+  //   }
 
-    // Reset all TT session state and trigger summary
-    setTtSessionModalOpen(false);
-    setTtSessionActive(false);
-    setTtScenarioActive(false);
-    setIsRecording(false);
-    setDriveSummaryOpen(true);
-    setSelectedSubtask("");
-    setStartTime(null);
+  //   // Reset all TT session state and trigger summary
+  //   setTtSessionModalOpen(false);
+  //   setTtSessionActive(false);
+  //   setTtScenarioActive(false);
+  //   setIsRecording(false);
+  //   setDriveSummaryOpen(true);
+  //   setSelectedSubtask("");
+  //   setStartTime(null);
 
-    sendMqttEvent("session_stop");
+  //   sendMqttEvent("session_stop");
 
-    toast({
-      title: "TestTrack Session Stopped",
-      description: "Session has been ended",
-    });
-};
+  //   toast({
+  //     title: "TestTrack Session Stopped",
+  //     description: "Session has been ended",
+  //   });
+  // };
 
 
   const startTtScenario = () => {
@@ -580,6 +670,22 @@ export default function Dashboard() {
 
   // Toggle recording state
   const toggleRecording = async () => {
+    // Check if disk is ejected
+    if (isDiskEjected) {
+      toast({
+        title: "Disk Ejected",
+        description: "Please insert a disk before recording.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Check if disk has data and offer to clean
+    if (!isRecording && diskUsage > 0) {
+      setShowCleanupConfirm(true);
+      return;
+    }
+    
     if (testTrackMode) {
       if (!selectedSubtask) {
         setSelectedDriver("tt-driver")
@@ -602,34 +708,47 @@ export default function Dashboard() {
       setIsRecording(!isRecording)
       setHasRecorded(true)
       setStartTime(!isRecording ? new Date() : null)
+      
+      // Handle disk usage tracking for TestTrack mode
+      if (!isRecording) {
+        // Start recording - initialize disk usage tracking
+        setRecordingStartTime(new Date())
+        setDiskUsageHistory([])
+        // Add initial data point
+        setDiskUsageHistory([{ time: new Date().toLocaleTimeString(), usage: diskUsage }])
+      } else {
+        // Stop recording - clear recording start time
+        setRecordingStartTime(null)
+        // Increment sessions recorded counter
+        setSessionsRecorded(prev => prev + 1)
+      }
 
       toast({
         title: !isRecording ? "TestTrack Session Started" : "TestTrack Session Stopped",
-        description: !isRecording ? "Ready to record scenarios" : "Session ended",
+        description: !isRecording ? "Ready to record scenarios" : `Session ended. Disk usage: ${diskUsage.toFixed(1)} GB`,
       })
 
       return
     }
 
-    // Example: Fetch disk usage from backend or placeholder
-    const diskUsage = 85; // Replace with real API call
-    if (diskUsage >= 90) {
+    // Enhanced disk usage validation
+    const diskPercentage = getDiskUsagePercentage()
+    if (diskPercentage >= 90) {
       toast({
         title: "Disk Full",
         description: "Recording is blocked due to >90% disk usage.",
         variant: "destructive"
       });
       return;
-    } else if (diskUsage >= 80) {
+    } else if (diskPercentage >= 80) {
       toast({
         title: "High Disk Usage",
-        description: "Disk usage is above 80%. Consider clearing space.",
+        description: `Disk usage is at ${diskPercentage}%. Consider clearing space.`,
         variant: "default"
       });
     }
     if (isRecording) {
       setIsRecording(false)
-      setCurrentStep(5)
 
       // Pre-fill drive summary if we have a selected subtask
       if (selectedSubtask) {
@@ -716,74 +835,109 @@ export default function Dashboard() {
     })
   }
 
-  // Upload approved sessions
-  const uploadSessions = () => {
-    const approvedSessions = Object.entries(sessionApprovals)
-      .filter(([_, approved]) => approved)
-      .map(([id]) => id)
-
-    if (approvedSessions.length === 0) return
-
-    setUploadInProgress(true)
-
-    // Simulate upload process
-    setTimeout(() => {
-      setUploadInProgress(false)
-      setUploadComplete(true)
-
-      // Clear TT repetitions after successful upload
-      localStorage.removeItem("tt-valid-reps");
-      localStorage.removeItem("tt-invalid-reps");
-      setValidTTReps(0);
-      setInvalidTTReps(0);
-
-      toast({
-        title: "Upload Complete",
-        description: `${approvedSessions.length} sessions uploaded successfully`,
-      })
-
-      // Reset after showing completion message
-      setTimeout(() => {
-        setUploadComplete(false)
-        setUploaderModalOpen(false)
-        setSessionApprovals({})
-        setCurrentStep(7) // Move to final step
-      }, 3000)
-    }, 2000)
+  // Function to re-insert the disk
+  const reinsertDisk = () => {
+    setIsDiskEjected(false);
+    toast({
+      title: "Disk Inserted",
+      description: "The disk has been inserted and is ready to use.",
+    });
   }
+
+  // Upload approved sessions (placeholder for future implementation)
+  // Commented out to fix linting issues - will be implemented later
 
   const anySessionApproved = Object.values(sessionApprovals).some((approved) => approved)
 
-  // UI Components
-  const SystemStatusIndicator = ({ name, isActive = true }: { name: string; isActive?: boolean }) => (
-    <div className="flex items-center gap-1.5">
-      <div className={cn("w-2.5 h-2.5 rounded-full", isActive ? "bg-green-500" : "bg-red-500")} />
-      <span className="text-xs text-gray-300">{name}</span>
+  // Enhanced System Status Components
+  const SystemStatusIndicator = ({ 
+    name, 
+    isActive = true, 
+    icon, 
+    description,
+    priority = "normal"
+  }: { 
+    name: string; 
+    isActive?: boolean; 
+    icon?: React.ReactNode;
+    description?: string;
+    priority?: "high" | "normal" | "low";
+  }) => {
+    const getStatusColor = () => {
+      if (!isActive) return "bg-red-500/20 text-red-400 border-red-500/30"
+      switch (priority) {
+        case "high": return "bg-green-500/20 text-green-400 border-green-500/30"
+        case "low": return "bg-blue-500/20 text-blue-400 border-blue-500/30"
+        default: return "bg-slate-500/20 text-slate-400 border-slate-500/30"
+      }
+    }
+
+    return (
+      <div className={cn(
+        "flex items-center gap-3 p-3 rounded-2xl border transition-all duration-200 btn-modern",
+        getStatusColor()
+      )}>
+        <div className="flex items-center gap-2">
+          {icon && <div className="w-4 h-4 flex-shrink-0">{icon}</div>}
+          <div className="flex flex-col">
+            <span className="text-sm font-intel-medium text-intel-display">{name}</span>
+            {description && (
+              <span className="text-xs opacity-70 font-intel-light">{description}</span>
+            )}
+          </div>
+        </div>
+        <div className={cn(
+          "w-2 h-2 rounded-full flex-shrink-0 transition-all duration-200",
+          isActive ? "bg-current animate-pulse" : "bg-current opacity-50"
+        )} />
     </div>
   )
+  }
 
   const ValidationItem = ({
     name,
     isValid = true,
     icon,
-  }: { name: string; isValid?: boolean; icon?: React.ReactNode }) => (
-    <div
-      className={cn(
-        "flex items-center justify-between p-3 rounded-xl transition-colors",
-        isValid ? "bg-slate-800 border-l-4 border-green-500" : "bg-slate-800 border-l-4 border-red-500",
-      )}
-    >
-      <div className="flex items-center gap-2">
-        {icon}
-        <span className="text-sm font-medium">{name}</span>
+    description,
+    value,
+  }: { 
+    name: string; 
+    isValid?: boolean; 
+    icon?: React.ReactNode;
+    description?: string;
+    value?: string | number;
+  }) => (
+    <div className="flex items-center justify-between p-3 rounded-xl bg-slate-800/30 border border-slate-700/20 hover:bg-slate-800/40 transition-all duration-200">
+      <div className="flex items-center gap-3">
+        <div className={cn(
+          "w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200",
+          isValid ? "bg-green-500/20 text-green-400" : "bg-red-500/20 text-red-400"
+        )}>
+          {icon || (isValid ? <CheckCircle className="h-4 w-4" /> : <X className="h-4 w-4" />)}
+        </div>
+        <div className="flex flex-col">
+          <span className="text-sm font-intel-medium text-intel-display">{name}</span>
+          {description && (
+            <span className="text-xs text-slate-400 font-intel-light">{description}</span>
+          )}
       </div>
-      <div
-        className={cn(
-          "flex items-center justify-center w-8 h-4 rounded-full",
-          isValid ? "bg-green-500/20" : "bg-red-500/20",
+      </div>
+      <div className="flex items-center gap-2">
+        {value && (
+          <span className="text-xs text-slate-300 font-intel-regular px-2 py-1 bg-slate-700/50 rounded-lg">
+            {value}
+          </span>
         )}
-      >
-        {isValid ? <CheckCircle className="h-3 w-3 text-green-500" /> : <X className="h-3 w-3 text-red-500" />}
+        <div className={cn(
+          "w-6 h-6 rounded-full flex items-center justify-center transition-all duration-200",
+          isValid ? "bg-green-500/20 text-green-400" : "bg-red-500/20 text-red-400"
+        )}>
+          {isValid ? (
+            <Check className="h-3 w-3" />
+          ) : (
+            <X className="h-3 w-3" />
+          )}
+        </div>
       </div>
     </div>
   )
@@ -801,251 +955,709 @@ export default function Dashboard() {
     }
   }, []);
 
+  // Disk usage simulation effect
+  useEffect(() => {
+    let interval: NodeJS.Timeout | null = null
+    
+    if (isRecording) {
+      // Set recording start time when recording begins
+      if (!recordingStartTime) {
+        setRecordingStartTime(new Date())
+      }
+      
+      // Update disk usage every 3 seconds during recording for smoother animation
+      interval = setInterval(() => {
+        simulateDiskUsageGrowth()
+      }, 3000)
+    } else if (!isRecording && recordingStartTime) {
+      // Clear recording start time when recording stops
+      setRecordingStartTime(null)
+    }
+    
+    return () => {
+      if (interval) clearInterval(interval)
+    }
+  }, [isRecording, recordingStartTime, simulateDiskUsageGrowth])
+
   return (
-    <div className="min-h-screen bg-slate-900 text-white max-w-md mx-auto">
-      {/* ---------------------------- TOP BAR ---------------------------- */}
-      <header className="bg-slate-800 p-4 border-b border-slate-700 shadow-md rounded-b-2xl">
-      <div className="flex justify-between items-center mb-4">
-        {/* Logo + Title */}
-        <div className="flex items-center gap-3">
-        <div className="relative h-[40px] w-[120px]">
-          <Image
-          src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/logo%20white-2jJx8ENUtxYrfB2ByeJwe5S0DTajSr.png"
-          alt="Mobileye Logo"
-          fill
-          className="object-contain object-left"
-          priority
-          />
-        </div>
-        <h1 className="text-lg font-bold whitespace-nowrap">DC DAT 4.0</h1>
-        </div>
+    <div className="min-h-screen bg-background text-foreground max-w-md mx-auto relative overflow-hidden">
+      {/* Enhanced Background with Depth */}
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900" />
+      <div className="absolute top-0 left-0 w-full h-2/3 bg-gradient-to-b from-blue-900/20 via-purple-900/10 to-transparent" />
+      <div className="absolute bottom-0 left-0 w-full h-1/3 bg-gradient-to-t from-slate-900/50 to-transparent" />
+      
+            {/* iOS 26 Style Header */}
+      <header className="card-modern p-8 rounded-3xl relative z-10 mb-8">
+        {/* Main Title */}
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-intel-medium bg-gradient-to-r from-white via-blue-100 to-white bg-clip-text text-transparent mb-2 text-intel-display tracking-tight">
+            DC DAT 4.0
+          </h1>
+          <p className="text-sm text-gray-400 font-intel-light tracking-wide text-intel-display">mobileye™</p>
+      </div>
 
-        {/* TestTrack switch */}
-        <div className="flex items-center gap-2">
-        <span className="text-xs text-gray-300">TestTrack Mode</span>
-        <Switch
-          checked={testTrackMode}
-          onCheckedChange={setTestTrackMode}
-          className="data-[state=checked]:bg-green-500"
+        {/* Modern Toggle Controls */}
+        <ToggleControls
+          testTrackMode={testTrackMode}
+          loggingMode={loggingMode}
+          onTestTrackToggle={setTestTrackMode}
+          onLoggingToggle={(checked) => {
+            setLoggingMode(checked)
+            if (checked) openLoggingModal()
+          }}
         />
-        </div>
-      </div>
 
-      <div className="flex flex-col gap-4">
-        {/* Removed SystemStatusIndicator from here */}
-
-        {/* --- Devices Online/Offline panel --- */}
-        <div className="mt-4 grid grid-cols-3 gap-4 text-sm text-muted-foreground">
-        {/* Logger */}
-        <div className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-muted/10">
-          <Cpu className="h-4 w-4 text-gray-400" />
-          <span>Logger</span>
-          <span
-          className={`ml-auto w-2.5 h-2.5 rounded-full ${
-            true ? "bg-green-500" : "bg-red-500"
-          }`}
-          />
-        </div>
-        {/* EPM */}
-        <div className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-muted/10">
-          <Zap className="h-4 w-4 text-gray-400" />
-          <span>EPM</span>
-          <span
-          className={`ml-auto w-2.5 h-2.5 rounded-full ${
-            false ? "bg-green-500" : "bg-red-500"
-          }`}
-          />
-        </div>
-        {/*  Disk */}
-        <div className="flex flex-col px-3 py-2 rounded-lg bg-muted/10">
-          <span className="flex items-center gap-1 mb-1">
-          <HardDrive className="h-4 w-4 text-gray-400" />
-           Disk
-          </span>
-          <div className="w-full bg-muted h-2 rounded">
-          <div className="h-2 bg-blue-500 rounded" style={{ width: "56%" }} />
-          </div>
-          <span className="text-xs mt-1 text-right text-muted-foreground">56%</span>
-        </div>
-        </div>
-      </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="p-4 flex flex-col gap-4">
-        {/* AVD Mini Map */}
-        <Card className="bg-slate-800 border-slate-700 shadow-lg rounded-2xl">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base">AVD Mini Map</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="relative h-48 rounded-xl overflow-hidden bg-blue-900">
-              {/* Zoom controls */}
-              <div className="absolute top-2 right-2 flex flex-col gap-1">
-                <Button variant="outline" size="icon" className="h-7 w-7 rounded-lg bg-slate-800/70 border-slate-600">
-                  <Plus className="h-3.5 w-3.5" />
-                </Button>
-                <Button variant="outline" size="icon" className="h-7 w-7 rounded-lg bg-slate-800/70 border-slate-600">
-                  <Minus className="h-3.5 w-3.5" />
-                </Button>
-              </div>
-
-              {/* Compass */}
-              <div className="absolute top-2 right-12 bg-slate-800/70 p-1 rounded-full border border-slate-600">
-                <Compass className="h-5 w-5 text-white" />
-              </div>
-
-              {/* Car icon with location rings */}
-              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                {/* Location rings */}
-                <div className="w-28 h-28 rounded-full border border-white/20 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></div>
-                <div className="w-16 h-16 rounded-full border border-white/30 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></div>
-                <div className="w-8 h-8 rounded-full border border-white/40 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></div>
-
-                {/* Car icon */}
-                <div className="bg-blue-500 p-1 rounded-full">
-                  <Car className="h-4 w-4 text-white" />
-                </div>
-              </div>
-            </div>
-
-            <Badge
-              variant="outline"
-              className="w-full mt-3 justify-center py-1.5 text-sm font-medium bg-green-900/20 text-green-400 border-green-800 rounded-lg"
-            >
-              Localized: Yes
+        {/* System Status Indicators */}
+        <div className="mt-5 space-y-5">
+          <div className="flex gap-3 justify-center">
+            {/* Logger Pill */}
+            <Badge className={cn(
+              "flex items-center gap-2 px-4 py-2 rounded-full font-intel-medium text-xs transition-all duration-300 text-intel-display",
+              "bg-green-500/20 text-green-400 border-green-500/30"
+            )}>
+              <Cpu className="h-3 w-3" />
+              Logger
+              <CheckCircle className="h-3 w-3" />
             </Badge>
 
-            <Button variant="outline" className="w-full mt-3 rounded-xl">
-              <Map className="mr-2 h-4 w-4" />
-              Mini Map
-            </Button>
-          </CardContent>
-        </Card>
+            {/* EPM Pill */}
+            <Badge className={cn(
+              "flex items-center gap-2 px-4 py-2 rounded-full font-intel-medium text-xs transition-all duration-300 text-intel-display",
+              "bg-red-500/20 text-red-400 border-red-500/30"
+            )}>
+              <Zap className="h-3 w-3" />
+              EPM
+              <X className="h-3 w-3" />
+            </Badge>
+              </div>
 
-        {/* Session Control */}
-        <Card className="bg-slate-800 border-slate-700 shadow-lg rounded-2xl">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base">Session Control</CardTitle>
-            {selectedDriver && selectedSubtask && (
-              <CardDescription className="text-xs text-gray-400">
-                Driver: {drivers.find((d) => d.id === selectedDriver)?.name} • Subtask:{" "}
-                {existingSubtasks.find((s) => s.id === selectedSubtask)?.summary || subtaskSummary}
-              </CardDescription>
-            )}
-          </CardHeader>
-          <CardContent className="flex flex-col items-center">
-            <div className="text-4xl font-mono font-bold my-4">{time}</div>
+          {/* Recording Timer and Controls */}
+          <div className="card-modern p-6 rounded-3xl">
+            {/* Digital Timer */}
+            <div className="text-center mb-4">
+              <div className="text-5xl font-intel-light bg-gradient-to-r from-white via-blue-100 to-white bg-clip-text text-transparent tracking-wider text-intel-display">
+                {time}
+                </div>
+              {isRecording && (
+                <div className="flex items-center justify-center gap-1.5 mt-2">
+                  <div className="w-2 h-2 bg-red-700 rounded-full"></div>
+                  <span className="text-xs text-slate-400 font-intel-medium text-intel-display">RECORDING</span>
+              </div>
+              )}
+            </div>
 
+            {/* Start/Stop Recording Button */}
             <Button
+              variant={isRecording ? "destructive" : isDiskEjected ? "outline" : "success"}
+              size="lg"
               className={cn(
-                "w-full py-5 text-base mb-4 rounded-xl",
-                isRecording ? "bg-red-600 hover:bg-red-700" : "bg-green-600 hover:bg-green-700",
+                "w-full font-intel-medium text-base text-intel-display btn-modern",
+                isDiskEjected && "bg-slate-800/60 text-slate-500 border-slate-700/50"
               )}
               onClick={toggleRecording}
+              disabled={isDiskEjected}
             >
               {isRecording ? (
                 <>
                   <X className="mr-2 h-5 w-5" />
                   Stop Recording
                 </>
+              ) : isDiskEjected ? (
+                <>
+                  <ServerOff className="mr-2 h-5 w-5" />
+                  Disk Required
+                </>
               ) : (
                 <>
-                  <Check className="mr-2 h-5 w-5" />
+                  <CheckCircle className="mr-2 h-5 w-5" />
                   Start Recording
                 </>
               )}
             </Button>
 
+            {/* End Drive & Approve Button */}
             {hasRecorded && (
               <Button
+                variant={isDiskEjected ? "outline" : "secondary"}
+                size="lg"
                 onClick={() => setUploaderModalOpen(true)}
-                disabled={isRecording}
+                disabled={isRecording || isDiskEjected}
                 className={cn(
-                  "w-full mt-4 px-6 py-5 rounded-2xl text-white text-sm font-semibold shadow-lg transition-all",
-                  isRecording
-                    ? "bg-gradient-to-r from-slate-500 to-slate-600 opacity-60 cursor-not-allowed"
-                    : "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+                  "w-full font-intel-medium text-base mt-4 btn-modern bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white border-purple-500/20",
+                  isDiskEjected && "bg-slate-800/60 text-slate-500 border-slate-700/50"
                 )}
               >
-                <FileCheck2 className="w-4 h-4 mr-2" />
+                {isDiskEjected ? (
+                  <>
+                    <ServerOff className="w-5 h-5 mr-2" />
+                    Disk Required
+                  </>
+                ) : (
+                  <>
+                    <FileCheck2 className="w-5 h-5 mr-2" />
                 End Drive & Approve
+                  </>
+                )}
               </Button>
             )}
 
-            <div className="w-full space-y-3 mt-2">
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="ins"
-                  checked={insChecked}
-                  onCheckedChange={(checked) => !isRecording && setInsChecked(checked as boolean)}
+            {/* Sensor Buttons */}
+            <div className="mt-3">
+              <SensorButtons
+                insActive={insChecked}
+                velodyneActive={velodyneChecked}
+                onInsToggle={setInsChecked}
+                onVelodyneToggle={setVelodyneChecked}
                   disabled={isRecording}
-                  className={isRecording ? "opacity-60" : ""}
-                />
-                <label
-                  htmlFor="ins"
-                  className={cn(
-                    "text-sm font-medium leading-none peer-disabled:cursor-not-allowed",
-                    isRecording ? "opacity-60" : "",
-                  )}
-                >
-                  INS
-                </label>
+              />
+            </div>
+          </div>
+
+          {/* Enhanced Disk Usage Display - Modern Design */}
+          <div className={cn(
+            "card-modern p-6 rounded-3xl",
+            isDiskEjected && "bg-slate-900/60 border-red-900/30"
+          )}>
+            <div className="flex items-center gap-4">
+              {!isDiskEjected ? (
+                <div className="relative w-20 h-20">
+                  {/* Background Circle */}
+                  <svg className="w-20 h-20 transform -rotate-90" viewBox="0 0 100 100">
+                    <circle
+                      cx="50"
+                      cy="50"
+                      r="42"
+                      stroke="rgba(255,255,255,0.08)"
+                      strokeWidth="6"
+                      fill="none"
+                    />
+                    {/* Progress Circle */}
+                    <circle
+                      cx="50"
+                      cy="50"
+                      r="42"
+                      stroke="url(#diskGradientDynamic)"
+                      strokeWidth="6"
+                      fill="none"
+                      strokeLinecap="round"
+                      strokeDasharray={`${getDiskUsagePercentage() * 2.64} ${(100 - getDiskUsagePercentage()) * 2.64}`}
+                      className="transition-all duration-1000 ease-out"
+                      style={{
+                        filter: `drop-shadow(0 0 8px ${getDiskUsageColor().color})`
+                      }}
+                    />
+                    
+                    {/* Recording Animation Ring */}
+                    {isRecording && (
+                      <circle
+                        cx="50"
+                        cy="50"
+                        r="46"
+                        stroke="rgba(255, 255, 255, 0.15)"
+                        strokeWidth="2"
+                        fill="none"
+                        strokeLinecap="round"
+                        className="animate-recording-ring"
+                      />
+                    )}
+                    <defs>
+                      <linearGradient id="diskGradientDynamic" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stopColor={getDiskUsageColor().color} />
+                        <stop offset="50%" stopColor={getDiskUsageColor().color} stopOpacity="0.8" />
+                        <stop offset="100%" stopColor={getDiskUsageColor().color} stopOpacity="0.6" />
+                      </linearGradient>
+                    </defs>
+                  </svg>
+                  
+                  {/* Center Content */}
+                  <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <HardDrive className="h-4 w-4 text-slate-400" />
+                    <div className={cn(
+                      "text-sm font-semibold mt-0.5 transition-colors duration-500",
+                      getDiskUsagePercentage() >= 90 ? "text-red-400" :
+                      getDiskUsagePercentage() >= 80 ? "text-orange-400" :
+                      getDiskUsagePercentage() >= 60 ? "text-yellow-400" :
+                      "text-blue-400"
+                    )}>
+                      {getDiskUsagePercentage()}%
               </div>
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="velodyne"
-                  checked={velodyneChecked}
-                  onCheckedChange={(checked) => !isRecording && setVelodyneChecked(checked as boolean)}
+                  </div>
+                </div>
+              ) : (
+                <div className="w-20 h-20 flex items-center justify-center">
+                  <div className="bg-red-900/20 p-4 rounded-full">
+                    <ServerOff className="h-12 w-12 text-red-500/70" />
+                  </div>
+                </div>
+              )}
+              
+              <div className="flex-1">
+                <div className="flex items-center justify-between">
+                  {!isDiskEjected ? (
+                    <>
+                      <div className="text-lg font-bold text-slate-200">
+                        {diskUsage.toFixed(1)} GB
+                      </div>
+                      
+                      {/* Disk Cleanup Button */}
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            className="h-8 px-3 rounded-full btn-modern text-xs flex gap-1.5 items-center font-intel-regular"
                   disabled={isRecording}
-                  className={isRecording ? "opacity-60" : ""}
-                />
-                <label
-                  htmlFor="velodyne"
-                  className={cn(
-                    "text-sm font-medium leading-none peer-disabled:cursor-not-allowed",
-                    isRecording ? "opacity-60" : "",
+                          >
+                            <RotateCcw className="h-3.5 w-3.5" />
+                            Clear Disk
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="modal-medium modal-content">
+                          <DialogHeader>
+                            <DialogTitle>Clean Disk Storage</DialogTitle>
+                            <DialogDescription>
+                              This will permanently delete all temporary files and free up disk space.
+                            </DialogDescription>
+                          </DialogHeader>
+                          <div className="py-4">
+                            <div className="bg-slate-800/60 p-4 rounded-lg mb-4">
+                              <div className="flex items-center justify-between mb-2">
+                                <span className="text-sm">Current Usage</span>
+                                <span className="text-sm font-medium">{diskUsage.toFixed(1)} GB</span>
+                              </div>
+                                                          <div className="flex items-center justify-between">
+                              <span className="text-sm">After Cleanup</span>
+                              <span className="text-sm font-medium text-green-400">0.0 GB</span>
+                            </div>
+                          </div>
+                          <div className="text-sm text-slate-400">
+                            This operation cannot be undone. Cleanup will not affect recorded sessions that have been approved.
+                          </div>
+                        </div>
+                        <DialogFooter>
+                          <Button 
+                            variant="outline" 
+                            className="btn-modern font-intel-regular"
+                            onClick={(e) => {
+                              // Find the closest dialog element and close it
+                              const dialog = (e.target as HTMLElement).closest('[role="dialog"]');
+                              const closeButton = dialog?.querySelector('[data-radix-collection-item]') as HTMLElement;
+                              if (closeButton) closeButton.click();
+                            }}
+                          >
+                            Cancel
+                          </Button>
+                          <Button 
+                            variant="destructive" 
+                            className="btn-modern font-intel-medium"
+                            onClick={() => {
+                              setDiskUsage(0);
+                              setDiskUsageHistory([]);
+                              toast({
+                                title: "Disk Cleaned",
+                                description: "All temporary files have been removed.",
+                              });
+                              
+                              // Find the closest dialog element and close it
+                              const dialog = document.querySelector('[role="dialog"]');
+                              const closeButton = dialog?.querySelector('[data-radix-collection-item]') as HTMLElement;
+                              if (closeButton) closeButton.click();
+                            }}
+                          >
+                            Clean Disk
+                          </Button>
+                        </DialogFooter>
+                        </DialogContent>
+                      </Dialog>
+                    </>
+                  ) : (
+                    <>
+                      <div className="text-lg font-bold text-red-400">
+                        Disk Ejected
+                      </div>
+                      <div className="text-sm text-slate-400 mt-1">
+                        Usage: N/A
+                      </div>
+                      
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        className="h-8 px-3 rounded-full btn-modern text-xs flex gap-1.5 items-center font-intel-regular"
+                        onClick={reinsertDisk}
+                      >
+                        <HardDrive className="h-3.5 w-3.5" />
+                        Insert Disk
+                      </Button>
+                    </>
                   )}
-                >
-                  Velodyne
-                </label>
+                </div>
+                
+                {!isDiskEjected ? (
+                  <>
+                    <div className="text-xs text-slate-400/80 mb-2">
+                      {(diskCapacity - diskUsage).toFixed(1)} GB available
+                    </div>
+                    
+                    {/* Mini Usage History Chart */}
+                    {diskUsageHistory.length > 0 && (
+                      <div className="h-6 flex items-end gap-0.5">
+                        {diskUsageHistory.slice(-12).map((point, index) => {
+                          const height = Math.max((point.usage / diskCapacity) * 100, 5)
+                          return (
+                            <div
+                              key={index}
+                              className="flex-1 bg-slate-500/40 rounded-t-sm transition-all duration-300"
+                              style={{ height: `${height}%` }}
+                            />
+                          )
+                        })}
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="text-xs text-slate-400/80 mt-2">
+                    Insert disk to continue recording sessions
+                  </div>
+                )}
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
+      </header>
 
-        {/* Validations */}
-        <Card className="bg-slate-800 border-slate-700 shadow-lg rounded-2xl">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base">Validations</CardTitle>
-          </CardHeader>
-          <CardContent>
+            {/* Main Content */}
+      <main className="p-6 flex flex-col gap-8 relative z-10">
+        {/* Radar/Map Display Component */}
+        {!showMap ? (
+          <div className="card-modern p-6 rounded-3xl">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-medium text-base">Radar</h3>
+              <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-xs px-2 py-1">
+                200m
+              </Badge>
+            </div>
+
+            {/* Clean Radar Display */}
+            <div className="relative w-full aspect-square max-w-[280px] mx-auto">
+              <div className="relative w-full h-full rounded-full bg-gradient-to-br from-slate-900/60 to-slate-800/40 border border-green-500/15 overflow-hidden">
+                
+                {/* Minimal Grid */}
+                <div className="absolute inset-0">
+                  <div className="absolute inset-4 rounded-full border border-green-400/10"></div>
+                  <div className="absolute inset-12 rounded-full border border-green-400/15"></div>
+                  <div className="absolute top-1/2 left-0 right-0 h-px bg-green-400/8"></div>
+                  <div className="absolute top-0 bottom-0 left-1/2 w-px bg-green-400/8"></div>
+                </div>
+
+                {/* Smooth Radar Sweep */}
+                <div className="absolute inset-0 rounded-full animate-spin" style={{ animationDuration: '4s' }}>
+                  <div className="absolute top-1/2 left-1/2 w-px h-1/2 bg-gradient-to-t from-green-400/80 via-green-400/40 to-transparent transform -translate-x-px origin-bottom"></div>
+                  <div className="absolute inset-0 rounded-full" style={{
+                    background: `conic-gradient(from 0deg, rgba(34, 197, 94, 0.2) 0deg, rgba(34, 197, 94, 0.1) 20deg, transparent 40deg, transparent 360deg)`
+                  }}></div>
+                </div>
+
+                {/* Clean Radar Blips */}
+                <div className="absolute inset-0">
+                  <div className="absolute top-[30%] left-[65%] w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse"></div>
+                  <div className="absolute top-[45%] left-[35%] w-1 h-1 rounded-full bg-yellow-400 animate-pulse" style={{ animationDelay: '0.8s' }}></div>
+                  <div className="absolute top-[65%] left-[70%] w-1 h-1 rounded-full bg-blue-400 animate-pulse" style={{ animationDelay: '1.2s' }}></div>
+                </div>
+
+                {/* Center Vehicle */}
+                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                  <div className="w-8 h-8 rounded-full bg-green-500/80 border border-green-400/50 flex items-center justify-center">
+                    <Car className="h-4 w-4 text-white" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Minimal Info */}
+              <div className="mt-3 flex items-center justify-between text-xs text-gray-400">
+                <span>3 targets</span>
+                <span>GPS locked</span>
+              </div>
+
+              {/* Action Button */}
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="w-full mt-4 btn-modern text-blue-400 border-blue-500/20 hover:bg-blue-500/10"
+                onClick={() => setShowMap(true)}
+              >
+                <Map className="mr-2 h-3 w-3" />
+                View Map
+              </Button>
+              </div>
+            </div>
+        ) : (
+          <div className="card-modern p-6 rounded-3xl h-[400px]">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-medium text-base">Navigation</h3>
+              <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30 text-xs px-2 py-1">
+                2.3 km
+              </Badge>
+            </div>
+            
+            {/* Main Map Area */}
+            <div className="flex-1 relative overflow-hidden bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl h-[300px]">
+              {/* Street Grid Background */}
+              <div className="absolute inset-0" style={{
+                backgroundImage: `
+                  linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
+                  linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px)
+                `,
+                backgroundSize: '40px 40px'
+              }}>
+              </div>
+
+              {/* Main Roads */}
+              <div className="absolute inset-0">
+                {/* Horizontal Main Road */}
+                <div className="absolute top-1/2 left-0 right-0 h-12 bg-slate-700 transform -translate-y-1/2">
+                  <div className="absolute top-1/2 left-0 right-0 h-px bg-yellow-400/60 transform -translate-y-1/2"></div>
+                  <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-white/20 transform -translate-y-1/2" style={{
+                    backgroundImage: 'repeating-linear-gradient(90deg, transparent, transparent 8px, white 8px, white 12px)',
+                    backgroundSize: '20px 1px'
+                  }}></div>
+                </div>
+
+                {/* Vertical Cross Street */}
+                <div className="absolute top-0 bottom-0 left-1/2 w-8 bg-slate-700 transform -translate-x-1/2">
+                  <div className="absolute top-0 bottom-0 left-1/2 w-px bg-yellow-400/60 transform -translate-x-1/2"></div>
+                </div>
+
+                {/* Side Streets */}
+                <div className="absolute top-[30%] left-0 right-0 h-6 bg-slate-700/80"></div>
+                <div className="absolute top-[70%] left-0 right-0 h-6 bg-slate-700/80"></div>
+                <div className="absolute top-0 bottom-0 left-[25%] w-6 bg-slate-700/80"></div>
+                <div className="absolute top-0 bottom-0 left-[75%] w-6 bg-slate-700/80"></div>
+              </div>
+
+              {/* Demo Vehicle with Endless Movement */}
+              <div className="absolute top-1/2 transform -translate-y-1/2 z-20" style={{
+                left: '0%',
+                animation: 'endlessMove 12s linear infinite'
+              }}>
+                <div className="relative z-20">
+                  {/* Vehicle */}
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 border-2 border-white shadow-lg flex items-center justify-center relative z-20">
+                    <Car className="h-4 w-4 text-white" />
+                  </div>
+                  {/* Vehicle Glow */}
+                  <div className="absolute inset-0 rounded-full bg-blue-400/30 animate-ping z-10"></div>
+                  {/* Speed Trail */}
+                  <div className="absolute -left-8 top-1/2 transform -translate-y-1/2 w-8 h-1 bg-gradient-to-r from-transparent to-blue-400/60 rounded-full z-10"></div>
+                </div>
+              </div>
+
+              {/* Additional Moving Vehicles */}
+              <div className="absolute top-[30%] transform -translate-y-1/2 z-15" style={{
+                left: '0%',
+                animation: 'endlessMove 15s linear infinite 3s'
+              }}>
+                <div className="w-6 h-6 rounded bg-gray-600 flex items-center justify-center relative z-15">
+                  <div className="w-3 h-3 bg-gray-400 rounded"></div>
+                </div>
+              </div>
+
+              <div className="absolute top-[70%] transform -translate-y-1/2 z-15" style={{
+                left: '0%',
+                animation: 'endlessMove 10s linear infinite 6s'
+              }}>
+                <div className="w-6 h-6 rounded bg-gray-600 flex items-center justify-center relative z-15">
+                  <div className="w-3 h-3 bg-gray-400 rounded"></div>
+                </div>
+              </div>
+
+              {/* Dynamic Route Path */}
+              <div className="absolute top-1/2 left-0 right-0 transform -translate-y-1/2 z-5">
+                <div className="h-1 bg-blue-500/40 relative overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-500 to-transparent animate-pulse"></div>
+                  <div className="absolute left-0 w-full h-full bg-gradient-to-r from-blue-600/60 via-blue-400/60 to-blue-600/60" style={{
+                    animation: 'routeFlow 3s linear infinite'
+                  }}></div>
+                </div>
+              </div>
+            </div>
+
+            {/* Action Button */}
+            <div className="mt-3 px-1">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="w-full btn-modern text-green-400 border-green-500/20 hover:bg-green-500/10 text-xs"
+                onClick={() => setShowMap(false)}
+              >
+                <Radio className="mr-1.5 h-3 w-3" />
+                View Radar
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Session Info - Modern Design */}
+        <div className="card-modern p-6 rounded-3xl">
+          {selectedDriver && selectedSubtask ? (
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <div className="text-sm font-medium text-slate-300">Session Details</div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-slate-800/40 p-3 rounded-xl">
+                  <div className="text-xs text-slate-400 mb-1">Driver</div>
+                  <div className="text-sm font-medium text-slate-200">
+                    {drivers.find((d) => d.id === selectedDriver)?.name || "Unknown"}
+                  </div>
+                </div>
+                
+                <div className="bg-slate-800/40 p-3 rounded-xl">
+                  <div className="text-xs text-slate-400 mb-1">Subtask</div>
+                  <div className="text-sm font-medium text-slate-200">
+                    {existingSubtasks.find((s) => s.id === selectedSubtask)?.summary || subtaskSummary || "Custom Task"}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <div className="text-sm font-medium text-slate-300">No Active Session</div>
+              </div>
+              
+              {sessionsRecorded > 0 && (
+                <div className="space-y-2">
+                  <div className="text-xs text-slate-400 mb-2">Recent Sessions:</div>
+                  {Array.from({ length: Math.min(sessionsRecorded, 3) }, (_, index) => {
+                    const now = new Date();
+                    const sessionTime = new Date(now.getTime() - (index * 10 * 60 * 1000)); // 10 minutes apart
+                    const dateStr = sessionTime.toLocaleDateString('en-GB').split('/').reverse().join('').slice(2); // DDMMYY format
+                    const timeStr = sessionTime.toTimeString().slice(0, 8).replace(/:/g, ''); // HHMMSS format
+                    const sessionName = `PSV2_Cay16_${dateStr}_${timeStr}_205655`;
+                    const duration = `${String(Math.floor(Math.random() * 30) + 15).padStart(2, '0')}:${String(Math.floor(Math.random() * 60)).padStart(2, '0')}:${String(Math.floor(Math.random() * 60)).padStart(2, '0')}`;
+                    
+                    return (
+                      <div key={index} className="bg-slate-800/40 p-2 rounded-lg">
+                        <div className="text-xs font-mono text-slate-300">{sessionName}</div>
+                        <div className="text-xs text-slate-500 mt-1">Duration: {duration}</div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Core System Status */}
+        <div className="card-modern p-6 rounded-3xl mb-6">
+          <div className="flex items-center gap-2 mb-4">
+            <CircuitBoard className="h-5 w-5 text-green-400" />
+            <div className="text-lg font-intel-medium text-intel-display">Core Systems</div>
+          </div>
+          
             <div className="grid grid-cols-1 gap-3">
-              <ValidationItem name="GPS" isValid={gpsValid} />
-              <ValidationItem name="Signals" isValid={signalsValid} />
-              <ValidationItem name="GTData" isValid={gtDataValid} />
-              <ValidationItem name="Frames" isValid={framesValid} icon={<Camera className="h-4 w-4 text-gray-400" />} />
-              <ValidationItem name="Radars" isValid={radarsValid} icon={<Radio className="h-4 w-4 text-gray-400" />} />
+            <SystemStatusIndicator 
+              name="Orchestrator" 
+              isActive={true} 
+              icon={<Cpu className="h-4 w-4" />}
+              description="Main coordinator"
+              priority="high"
+            />
+            <SystemStatusIndicator 
+              name="Logger" 
+              isActive={true} 
+              icon={<HardDrive className="h-4 w-4" />}
+              description="Data recording"
+              priority="high"
+            />
+            <SystemStatusIndicator 
+              name="MQTT" 
+              isActive={true} 
+              icon={<Wifi className="h-4 w-4" />}
+              description="Message broker"
+              priority="normal"
+            />
+            <SystemStatusIndicator 
+              name="Ruler" 
+              isActive={false} 
+              icon={<Gauge className="h-4 w-4" />}
+              description="Performance monitor"
+              priority="low"
+            />
             </div>
-            {testTrackMode && (validTTReps > 0 || invalidTTReps > 0) && (
-              <>
-                <div className="flex items-center justify-between px-3 text-sm text-green-400">
-                  <Check className="h-3 w-3 mr-1" />
-                  {validTTReps} valid repetitions
-                </div>
-                <div className="flex items-center justify-between px-3 text-sm text-red-400">
-                  <X className="h-3 w-3 mr-1" />
-                  {invalidTTReps} invalid repetitions
-                </div>
-              </>
-            )}
-          </CardContent>
-        </Card>
+        </div>
 
-        {/* Logging Mode Toggle Button (moved here) */}
-        <Button variant="secondary" onClick={openLoggingModal} className="mt-2">
-          <BugPlay className="w-4 h-4 mr-1" />
-          Logging Mode
+        {/* System Validations */}
+        <div className="card-modern p-6 rounded-3xl">
+          <div className="flex items-center gap-2 mb-4">
+            <Shield className="h-5 w-5 text-blue-400" />
+            <div className="text-lg font-intel-medium text-intel-display">System Status</div>
+          </div>
+          
+          <div className="space-y-3">
+            <ValidationItem 
+              name="GPS" 
+              isValid={gpsValid} 
+              icon={<Satellite className="h-4 w-4" />}
+              description="Satellite positioning"
+              value={gpsValid ? "8 sats" : "No signal"}
+            />
+            <ValidationItem 
+              name="Signals" 
+              isValid={signalsValid} 
+              icon={<Activity className="h-4 w-4" />}
+              description="Data transmission"
+              value={signalsValid ? "Strong" : "Weak"}
+            />
+            <ValidationItem 
+              name="GTData" 
+              isValid={gtDataValid} 
+              icon={<Database className="h-4 w-4" />}
+              description="Ground truth logging"
+              value={gtDataValid ? "Active" : "Inactive"}
+            />
+            <ValidationItem 
+              name="Frames" 
+              isValid={framesValid} 
+              icon={<Camera className="h-4 w-4" />}
+              description="Camera capture"
+              value={framesValid ? "30 FPS" : "0 FPS"}
+            />
+            <ValidationItem 
+              name="Radars" 
+              isValid={radarsValid} 
+              icon={<Radar className="h-4 w-4" />}
+              description="Sensor array"
+              value={radarsValid ? "4 active" : "0 active"}
+            />
+            </div>
+          
+            {testTrackMode && (validTTReps > 0 || invalidTTReps > 0) && (
+            <div className="mt-3 pt-3 border-t border-white/5 space-y-1">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-green-400 flex items-center gap-1">
+                  <Check className="h-3 w-3" />
+                  Valid: {validTTReps}
+                </span>
+                <span className="text-red-400 flex items-center gap-1">
+                  <X className="h-3 w-3" />
+                  Invalid: {invalidTTReps}
+                </span>
+                </div>
+                </div>
+          )}
+        </div>
+
+        {/* Logging Mode Button */}
+        <Button 
+          variant="outline" 
+          onClick={openLoggingModal} 
+          className="mt-4 btn-modern"
+        >
+          <BugPlay className="w-4 h-4 mr-1.5" />
+          Debug Console
         </Button>
 
         {/* ...existing code... */}
@@ -1053,7 +1665,7 @@ export default function Dashboard() {
 
       {/* Driver Picker Modal (Step 1) */}
       <Dialog open={driverPickerOpen} onOpenChange={setDriverPickerOpen}>
-        <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
+        <DialogContent className="modal-medium modal-content">
           <DialogHeader>
             <DialogTitle>Select Driver</DialogTitle>
             <DialogDescription>Choose a driver for this recording session</DialogDescription>
@@ -1118,7 +1730,7 @@ export default function Dashboard() {
 
       {/* Subtask Selector Modal (Step 2) */}
       <Dialog open={subtaskSelectorOpen} onOpenChange={setSubtaskSelectorOpen}>
-        <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
+        <DialogContent className="modal-large modal-content">
           <DialogHeader>
             <DialogTitle>Configure Subtask</DialogTitle>
             <DialogDescription>Select an existing subtask or create a new one</DialogDescription>
@@ -1300,8 +1912,8 @@ export default function Dashboard() {
                 </>
               )}
 
-              <div className="sticky bottom-0 pt-4 bg-background">
-                <Button type="submit" className="w-full">
+              <div className="sticky bottom-0 pt-4 bg-background z-10">
+                <Button type="submit" className="w-full relative z-10">
                   Continue
                 </Button>
               </div>
@@ -1312,7 +1924,7 @@ export default function Dashboard() {
 
       {/* Drive Summary Modal (Step 5) */}
       <Dialog open={driveSummaryOpen} onOpenChange={setDriveSummaryOpen}>
-        <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
+        <DialogContent className="modal-medium modal-content">
           <DialogHeader>
             <DialogTitle>Drive Summary</DialogTitle>
             <DialogDescription>Add details about the completed drive</DialogDescription>
@@ -1391,8 +2003,8 @@ export default function Dashboard() {
                 </Select>
               </div>
 
-              <div className="sticky bottom-0 pt-4 bg-background">
-                <Button type="submit" className="w-full">
+              <div className="sticky bottom-0 pt-4 bg-background z-10">
+                <Button type="submit" className="w-full relative z-10">
                   Finalize Session
                 </Button>
               </div>
@@ -1403,10 +2015,10 @@ export default function Dashboard() {
 
       {/* Rerun Modal (Step 7) */}
       <Dialog open={rerunModalOpen} onOpenChange={setRerunModalOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="modal-medium modal-content">
           <DialogHeader>
             <DialogTitle>Continue Previous Session?</DialogTitle>
-            <DialogDescription>You're starting another session for the same subtask</DialogDescription>
+            <DialogDescription>You&apos;re starting another session for the same subtask</DialogDescription>
           </DialogHeader>
 
           <div className="py-4 space-y-4">
@@ -1433,7 +2045,7 @@ export default function Dashboard() {
 
       {/* TestTrack Session Modal */}
       <Dialog open={ttSessionModalOpen} onOpenChange={setTtSessionModalOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="modal-medium modal-content">
           <DialogHeader>
             <DialogTitle>TestTrack Scenario Session</DialogTitle>
             <DialogDescription>Configure and control your TestTrack session</DialogDescription>
@@ -1501,7 +2113,7 @@ export default function Dashboard() {
                         Valid Repetitions ({validTT.length})
                       </h3>
                       <div className="space-y-2 max-h-[200px] overflow-y-auto">
-                        {validTT.map((rep: any, i: number) => (
+                        {validTT.map((rep: ValidTTRep, i: number) => (
                           <div key={i} className="p-2 bg-slate-800 rounded-lg text-xs space-y-1">
                             <div className="flex justify-between text-gray-400">
                               <span>{new Date(rep.timestamp).toLocaleString()}</span>
@@ -1525,7 +2137,7 @@ export default function Dashboard() {
                         Invalid Repetitions ({invalidTT.length})
                       </h3>
                       <div className="space-y-2 max-h-[200px] overflow-y-auto">
-                        {invalidTT.map((rep: any, i: number) => (
+                        {invalidTT.map((rep: InvalidTTRep, i: number) => (
                           <div key={i} className="p-2 bg-slate-800 rounded-lg text-xs">
                             <div className="flex justify-between text-gray-400">
                               <span>{new Date(rep.timestamp).toLocaleString()}</span>
@@ -1549,9 +2161,98 @@ export default function Dashboard() {
         </DialogContent>
       </Dialog>
 
+      {/* Disk Cleanup Confirmation Dialog */}
+      <Dialog open={showCleanupConfirm} onOpenChange={setShowCleanupConfirm}>
+        <DialogContent className="modal-medium modal-content">
+          <DialogHeader>
+            <DialogTitle>Disk Contains Data</DialogTitle>
+            <DialogDescription>
+              The disk already contains {diskUsage.toFixed(1)} GB of data. Would you like to clean it before recording?
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <div className="bg-slate-800/60 p-4 rounded-lg mb-4">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm">Current Usage</span>
+                <span className="text-sm font-medium">{diskUsage.toFixed(1)} GB</span>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              className="btn-modern font-intel-regular"
+              onClick={() => {
+                setShowCleanupConfirm(false);
+                // Continue with recording
+                if (testTrackMode) {
+                  if (!selectedSubtask) {
+                    setSelectedDriver("tt-driver");
+                    setSubtaskSelectorOpen(true);
+                  } else {
+                    setTtSessionActive(true);
+                    setTtScenarioActive(false);
+                    setTtValidScenario(false);
+                    sendMqttEvent("session_start");
+                    setIsRecording(true);
+                    setHasRecorded(true);
+                    setStartTime(new Date());
+                    setRecordingStartTime(new Date());
+                    setDiskUsageHistory([{ time: new Date().toLocaleTimeString(), usage: diskUsage }]);
+                  }
+                } else if (selectedSubtask) {
+                  setRerunModalOpen(true);
+                } else {
+                  startRecordingFlow();
+                }
+              }}
+            >
+              Continue Without Cleaning
+            </Button>
+            <Button 
+              variant="default" 
+              className="btn-modern font-intel-medium"
+              onClick={() => {
+                setDiskUsage(0);
+                setDiskUsageHistory([]);
+                setShowCleanupConfirm(false);
+                toast({
+                  title: "Disk Cleaned",
+                  description: "All temporary files have been removed.",
+                });
+                
+                // Continue with recording
+                if (testTrackMode) {
+                  if (!selectedSubtask) {
+                    setSelectedDriver("tt-driver");
+                    setSubtaskSelectorOpen(true);
+                  } else {
+                    setTtSessionActive(true);
+                    setTtScenarioActive(false);
+                    setTtValidScenario(false);
+                    sendMqttEvent("session_start");
+                    setIsRecording(true);
+                    setHasRecorded(true);
+                    setStartTime(new Date());
+                    setRecordingStartTime(new Date());
+                    setDiskUsageHistory([{ time: new Date().toLocaleTimeString(), usage: 0 }]);
+                  }
+                } else if (selectedSubtask) {
+                  setRerunModalOpen(true);
+                } else {
+                  startRecordingFlow();
+                }
+              }}
+            >
+              Clean Disk & Continue
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Session Uploader Modal (Step 6) */}
       <Dialog open={uploaderModalOpen} onOpenChange={setUploaderModalOpen}>
-        <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
+        <DialogContent className="modal-large modal-content">
           {uploadComplete ? (
             <>
               <DialogHeader>
@@ -1564,14 +2265,65 @@ export default function Dashboard() {
                   <CheckCircle className="h-12 w-12 text-green-500" />
                 </div>
                 <h3 className="text-xl font-semibold text-center">Review Complete</h3>
+                
+                <div className="bg-slate-800/80 p-4 rounded-lg w-full">
+                  <div className="flex justify-between items-center mb-3">
+                    <span className="text-gray-300">Sessions Recorded</span>
+                    <span className="text-xl font-bold text-white">{sessionsRecorded}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-300">Disk Usage</span>
+                    <span className="text-white">{diskUsage.toFixed(1)} GB / {diskCapacity} GB</span>
+                  </div>
+                </div>
+                
                 <p className="text-center text-gray-400">
-                  All sessions have been reviewed. The hard drive can now be removed.
+                  All sessions have been reviewed. You can now eject the disk.
                 </p>
-                <Alert className="bg-blue-900/30 border-blue-800 mt-4">
+                
+                <Button 
+                  onClick={() => {
+                    setIsDiskEjected(true);
+                    toast({
+                      title: "Disk Ejected",
+                      description: "The disk has been safely ejected.",
+                    });
+                    // Close modal after ejection
+                    setUploadComplete(false);
+                    setUploaderModalOpen(false);
+                  }}
+                  disabled={isDiskEjected}
+                  className="w-full btn-modern font-intel-medium"
+                  variant={isDiskEjected ? "outline" : "destructive"}
+                >
+                  {isDiskEjected ? (
+                    <>
+                      <ServerOff className="h-4 w-4 mr-2" />
+                      Disk Ejected
+                    </>
+                  ) : (
+                    <>
+                      <HardDriveDownload className="h-4 w-4 mr-2" />
+                      Eject Disk
+                    </>
+                  )}
+                </Button>
+                
+                {isDiskEjected && (
+                  <Alert className="bg-blue-900/30 border-blue-800">
                   <AlertCircle className="h-4 w-4 text-blue-500" />
                   <AlertTitle>Next Steps</AlertTitle>
-                  <AlertDescription className="text-blue-300">Insert HD at Copy Station</AlertDescription>
+                    <AlertDescription className="text-blue-300">Insert disk at Copy Station</AlertDescription>
                 </Alert>
+                )}
+                
+                {!isDiskEjected && (
+                  <Alert className="bg-amber-900/30 border-amber-800">
+                    <AlertCircle className="h-4 w-4 text-amber-500" />
+                    <AlertTitle>Warning</AlertTitle>
+                    <AlertDescription className="text-amber-300">Eject disk before removing it</AlertDescription>
+                  </Alert>
+                )}
               </div>
             </>
           ) : (
@@ -1789,16 +2541,16 @@ export default function Dashboard() {
                   </Card>
                 ))}
 
-                <DialogFooter className="sticky bottom-0 pt-4 bg-background border-t border-slate-700">
+                <DialogFooter className="sticky bottom-0 pt-4 bg-background border-t border-slate-700 z-10">
                   {uploadInProgress ? (
-                    <Button disabled className="w-full">
+                    <Button disabled className="w-full relative z-10">
                       <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-slate-400 border-t-white"></span>
                       Reviewing...
                     </Button>
                   ) : (
                     <Button
                       type="button"
-                      className="w-full"
+                      className="w-full relative z-10"
                       disabled={!anySessionApproved}
                       onClick={() => {
                         setUploadComplete(true);
@@ -1818,7 +2570,7 @@ export default function Dashboard() {
       {/* Logging Mode UI with deep debug features */}
       {showLoggingModal && (
         <Dialog open={showLoggingModal} onOpenChange={closeLoggingModal}>
-          <DialogContent className="max-w-5xl h-[90vh] overflow-y-auto p-6 bg-background shadow-xl rounded-xl">
+          <DialogContent className="modal-full modal-content modal-logging">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2 text-lg font-semibold">
                 <Terminal className="w-5 h-5 text-muted-foreground" />
@@ -1942,6 +2694,9 @@ export default function Dashboard() {
           </Alert>
         </div>
       )}
+
+      {/* Map Modal Component */}
+      {/* MapModal removed */}
 
       {/* Toast notifications */}
       <Toaster />

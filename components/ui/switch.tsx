@@ -18,7 +18,7 @@ const Switch = React.forwardRef<
       // Checked state
       "data-[state=checked]:bg-green-500 data-[state=checked]:border-transparent",
       // Unchecked state with visible ring and border
-      "data-[state=unchecked]:bg-input data-[state=unchecked]:ring-1 data-[state=unchecked]:ring-gray-500 data-[state=unchecked]:border data-[state=unchecked]:border-gray-500",
+      "data-[state=unchecked]:bg-slate-800 data-[state=unchecked]:ring-1 data-[state=unchecked]:ring-slate-700 data-[state=unchecked]:border data-[state=unchecked]:border-slate-700",
       className
     )}
     {...props}
@@ -26,7 +26,9 @@ const Switch = React.forwardRef<
   >
     <SwitchPrimitives.Thumb
       className={cn(
-        "pointer-events-none block h-5 w-5 rounded-full bg-background shadow-md ring-0 transition-transform data-[state=checked]:translate-x-5 data-[state=unchecked]:translate-x-0"
+        "pointer-events-none block h-5 w-5 rounded-full shadow-md ring-0 transition-transform",
+        "data-[state=checked]:bg-background data-[state=checked]:translate-x-5",
+        "data-[state=unchecked]:bg-slate-200 data-[state=unchecked]:translate-x-0"
       )}
     />
   </SwitchPrimitives.Root>
