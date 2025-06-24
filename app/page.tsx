@@ -1380,165 +1380,177 @@ export default function Dashboard() {
           <div className="card-modern p-6 rounded-3xl">
             <div className="flex items-center justify-between mb-3">
               <h3 className="font-medium text-base">Radar</h3>
-              <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-xs px-2 py-1">
-                200m
-              </Badge>
+              <div className="flex items-center gap-2">
+          <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-xs px-2 py-1 flex items-center gap-1">
+            <CheckCircle className="h-4 w-4 text-green-400" />
+            Localized
+          </Badge>
+          <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-xs px-2 py-1">
+            200m
+          </Badge>
+              </div>
             </div>
 
             {/* Clean Radar Display */}
             <div className="relative w-full aspect-square max-w-[280px] mx-auto">
               <div className="relative w-full h-full rounded-full bg-gradient-to-br from-slate-900/60 to-slate-800/40 border border-green-500/15 overflow-hidden">
-                
-                {/* Minimal Grid */}
-                <div className="absolute inset-0">
-                  <div className="absolute inset-4 rounded-full border border-green-400/10"></div>
-                  <div className="absolute inset-12 rounded-full border border-green-400/15"></div>
-                  <div className="absolute top-1/2 left-0 right-0 h-px bg-green-400/8"></div>
-                  <div className="absolute top-0 bottom-0 left-1/2 w-px bg-green-400/8"></div>
-                </div>
+          
+          {/* Minimal Grid */}
+          <div className="absolute inset-0">
+            <div className="absolute inset-4 rounded-full border border-green-400/10"></div>
+            <div className="absolute inset-12 rounded-full border border-green-400/15"></div>
+            <div className="absolute top-1/2 left-0 right-0 h-px bg-green-400/8"></div>
+            <div className="absolute top-0 bottom-0 left-1/2 w-px bg-green-400/8"></div>
+          </div>
 
-                {/* Smooth Radar Sweep */}
-                <div className="absolute inset-0 rounded-full animate-spin" style={{ animationDuration: '4s' }}>
-                  <div className="absolute top-1/2 left-1/2 w-px h-1/2 bg-gradient-to-t from-green-400/80 via-green-400/40 to-transparent transform -translate-x-px origin-bottom"></div>
-                  <div className="absolute inset-0 rounded-full" style={{
-                    background: `conic-gradient(from 0deg, rgba(34, 197, 94, 0.2) 0deg, rgba(34, 197, 94, 0.1) 20deg, transparent 40deg, transparent 360deg)`
-                  }}></div>
-                </div>
+          {/* Smooth Radar Sweep */}
+          <div className="absolute inset-0 rounded-full animate-spin" style={{ animationDuration: '4s' }}>
+            <div className="absolute top-1/2 left-1/2 w-px h-1/2 bg-gradient-to-t from-green-400/80 via-green-400/40 to-transparent transform -translate-x-px origin-bottom"></div>
+            <div className="absolute inset-0 rounded-full" style={{
+              background: `conic-gradient(from 0deg, rgba(34, 197, 94, 0.2) 0deg, rgba(34, 197, 94, 0.1) 20deg, transparent 40deg, transparent 360deg)`
+            }}></div>
+          </div>
 
-                {/* Clean Radar Blips */}
-                <div className="absolute inset-0">
-                  <div className="absolute top-[30%] left-[65%] w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse"></div>
-                  <div className="absolute top-[45%] left-[35%] w-1 h-1 rounded-full bg-yellow-400 animate-pulse" style={{ animationDelay: '0.8s' }}></div>
-                  <div className="absolute top-[65%] left-[70%] w-1 h-1 rounded-full bg-blue-400 animate-pulse" style={{ animationDelay: '1.2s' }}></div>
-                </div>
+          {/* Clean Radar Blips */}
+          <div className="absolute inset-0">
+            <div className="absolute top-[30%] left-[65%] w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse"></div>
+            <div className="absolute top-[45%] left-[35%] w-1 h-1 rounded-full bg-yellow-400 animate-pulse" style={{ animationDelay: '0.8s' }}></div>
+            <div className="absolute top-[65%] left-[70%] w-1 h-1 rounded-full bg-blue-400 animate-pulse" style={{ animationDelay: '1.2s' }}></div>
+          </div>
 
-                {/* Center Vehicle */}
-                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                  <div className="w-8 h-8 rounded-full bg-green-500/80 border border-green-400/50 flex items-center justify-center">
-                    <Car className="h-4 w-4 text-white" />
-                  </div>
-                </div>
+          {/* Center Vehicle */}
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+            <div className="w-8 h-8 rounded-full bg-green-500/80 border border-green-400/50 flex items-center justify-center">
+              <Car className="h-4 w-4 text-white" />
+            </div>
+          </div>
               </div>
 
               {/* Minimal Info */}
               <div className="mt-3 flex items-center justify-between text-xs text-gray-400">
-                <span>3 targets</span>
-                <span>GPS locked</span>
+          <span>3 targets</span>
+          <span>GPS locked</span>
               </div>
 
               {/* Action Button */}
               <Button 
-                variant="outline" 
-                size="sm" 
-                className="w-full mt-4 btn-modern text-blue-400 border-blue-500/20 hover:bg-blue-500/10"
-                onClick={() => setShowMap(true)}
+          variant="outline" 
+          size="sm" 
+          className="w-full mt-4 btn-modern text-blue-400 border-blue-500/20 hover:bg-blue-500/10"
+          onClick={() => setShowMap(true)}
               >
-                <Map className="mr-2 h-3 w-3" />
-                View Map
+          <Map className="mr-2 h-3 w-3" />
+          View Map
               </Button>
-              </div>
             </div>
+          </div>
         ) : (
           <div className="card-modern p-6 rounded-3xl h-[400px]">
             <div className="flex items-center justify-between mb-3">
               <h3 className="font-medium text-base">Navigation</h3>
-              <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30 text-xs px-2 py-1">
-                2.3 km
-              </Badge>
+              <div className="flex items-center gap-2">
+          <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-xs px-2 py-1 flex items-center gap-1">
+            <CheckCircle className="h-4 w-4 text-green-400" />
+            Localized
+          </Badge>
+          <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30 text-xs px-2 py-1">
+            2.3 km
+          </Badge>
+              </div>
             </div>
             
             {/* Main Map Area */}
             <div className="flex-1 relative overflow-hidden bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl h-[300px]">
               {/* Street Grid Background */}
               <div className="absolute inset-0" style={{
-                backgroundImage: `
-                  linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
-                  linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px)
-                `,
-                backgroundSize: '40px 40px'
+          backgroundImage: `
+            linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px)
+          `,
+          backgroundSize: '40px 40px'
               }}>
               </div>
 
               {/* Main Roads */}
               <div className="absolute inset-0">
-                {/* Horizontal Main Road */}
-                <div className="absolute top-1/2 left-0 right-0 h-12 bg-slate-700 transform -translate-y-1/2">
-                  <div className="absolute top-1/2 left-0 right-0 h-px bg-yellow-400/60 transform -translate-y-1/2"></div>
-                  <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-white/20 transform -translate-y-1/2" style={{
-                    backgroundImage: 'repeating-linear-gradient(90deg, transparent, transparent 8px, white 8px, white 12px)',
-                    backgroundSize: '20px 1px'
-                  }}></div>
-                </div>
+          {/* Horizontal Main Road */}
+          <div className="absolute top-1/2 left-0 right-0 h-12 bg-slate-700 transform -translate-y-1/2">
+            <div className="absolute top-1/2 left-0 right-0 h-px bg-yellow-400/60 transform -translate-y-1/2"></div>
+            <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-white/20 transform -translate-y-1/2" style={{
+              backgroundImage: 'repeating-linear-gradient(90deg, transparent, transparent 8px, white 8px, white 12px)',
+              backgroundSize: '20px 1px'
+            }}></div>
+          </div>
 
-                {/* Vertical Cross Street */}
-                <div className="absolute top-0 bottom-0 left-1/2 w-8 bg-slate-700 transform -translate-x-1/2">
-                  <div className="absolute top-0 bottom-0 left-1/2 w-px bg-yellow-400/60 transform -translate-x-1/2"></div>
-                </div>
+          {/* Vertical Cross Street */}
+          <div className="absolute top-0 bottom-0 left-1/2 w-8 bg-slate-700 transform -translate-x-1/2">
+            <div className="absolute top-0 bottom-0 left-1/2 w-px bg-yellow-400/60 transform -translate-x-1/2"></div>
+          </div>
 
-                {/* Side Streets */}
-                <div className="absolute top-[30%] left-0 right-0 h-6 bg-slate-700/80"></div>
-                <div className="absolute top-[70%] left-0 right-0 h-6 bg-slate-700/80"></div>
-                <div className="absolute top-0 bottom-0 left-[25%] w-6 bg-slate-700/80"></div>
-                <div className="absolute top-0 bottom-0 left-[75%] w-6 bg-slate-700/80"></div>
+          {/* Side Streets */}
+          <div className="absolute top-[30%] left-0 right-0 h-6 bg-slate-700/80"></div>
+          <div className="absolute top-[70%] left-0 right-0 h-6 bg-slate-700/80"></div>
+          <div className="absolute top-0 bottom-0 left-[25%] w-6 bg-slate-700/80"></div>
+          <div className="absolute top-0 bottom-0 left-[75%] w-6 bg-slate-700/80"></div>
               </div>
 
               {/* Demo Vehicle with Endless Movement */}
               <div className="absolute top-1/2 transform -translate-y-1/2 z-20" style={{
-                left: '0%',
-                animation: 'endlessMove 12s linear infinite'
+          left: '0%',
+          animation: 'endlessMove 12s linear infinite'
               }}>
-                <div className="relative z-20">
-                  {/* Vehicle */}
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 border-2 border-white shadow-lg flex items-center justify-center relative z-20">
-                    <Car className="h-4 w-4 text-white" />
-                  </div>
-                  {/* Vehicle Glow */}
-                  <div className="absolute inset-0 rounded-full bg-blue-400/30 animate-ping z-10"></div>
-                  {/* Speed Trail */}
-                  <div className="absolute -left-8 top-1/2 transform -translate-y-1/2 w-8 h-1 bg-gradient-to-r from-transparent to-blue-400/60 rounded-full z-10"></div>
-                </div>
+          <div className="relative z-20">
+            {/* Vehicle */}
+            <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 border-2 border-white shadow-lg flex items-center justify-center relative z-20">
+              <Car className="h-4 w-4 text-white" />
+            </div>
+            {/* Vehicle Glow */}
+            <div className="absolute inset-0 rounded-full bg-blue-400/30 animate-ping z-10"></div>
+            {/* Speed Trail */}
+            <div className="absolute -left-8 top-1/2 transform -translate-y-1/2 w-8 h-1 bg-gradient-to-r from-transparent to-blue-400/60 rounded-full z-10"></div>
+          </div>
               </div>
 
               {/* Additional Moving Vehicles */}
               <div className="absolute top-[30%] transform -translate-y-1/2 z-15" style={{
-                left: '0%',
-                animation: 'endlessMove 15s linear infinite 3s'
+          left: '0%',
+          animation: 'endlessMove 15s linear infinite 3s'
               }}>
-                <div className="w-6 h-6 rounded bg-gray-600 flex items-center justify-center relative z-15">
-                  <div className="w-3 h-3 bg-gray-400 rounded"></div>
-                </div>
+          <div className="w-6 h-6 rounded bg-gray-600 flex items-center justify-center relative z-15">
+            <div className="w-3 h-3 bg-gray-400 rounded"></div>
+          </div>
               </div>
 
               <div className="absolute top-[70%] transform -translate-y-1/2 z-15" style={{
-                left: '0%',
-                animation: 'endlessMove 10s linear infinite 6s'
+          left: '0%',
+          animation: 'endlessMove 10s linear infinite 6s'
               }}>
-                <div className="w-6 h-6 rounded bg-gray-600 flex items-center justify-center relative z-15">
-                  <div className="w-3 h-3 bg-gray-400 rounded"></div>
-                </div>
+          <div className="w-6 h-6 rounded bg-gray-600 flex items-center justify-center relative z-15">
+            <div className="w-3 h-3 bg-gray-400 rounded"></div>
+          </div>
               </div>
 
               {/* Dynamic Route Path */}
               <div className="absolute top-1/2 left-0 right-0 transform -translate-y-1/2 z-5">
-                <div className="h-1 bg-blue-500/40 relative overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-500 to-transparent animate-pulse"></div>
-                  <div className="absolute left-0 w-full h-full bg-gradient-to-r from-blue-600/60 via-blue-400/60 to-blue-600/60" style={{
-                    animation: 'routeFlow 3s linear infinite'
-                  }}></div>
-                </div>
+          <div className="h-1 bg-blue-500/40 relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-500 to-transparent animate-pulse"></div>
+            <div className="absolute left-0 w-full h-full bg-gradient-to-r from-blue-600/60 via-blue-400/60 to-blue-600/60" style={{
+              animation: 'routeFlow 3s linear infinite'
+            }}></div>
+          </div>
               </div>
             </div>
 
             {/* Action Button */}
             <div className="mt-3 px-1">
               <Button 
-                variant="outline" 
-                size="sm" 
-                className="w-full btn-modern text-green-400 border-green-500/20 hover:bg-green-500/10 text-xs"
-                onClick={() => setShowMap(false)}
+          variant="outline" 
+          size="sm" 
+          className="w-full btn-modern text-green-400 border-green-500/20 hover:bg-green-500/10 text-xs"
+          onClick={() => setShowMap(false)}
               >
-                <Radio className="mr-1.5 h-3 w-3" />
-                View Radar
+          <Radio className="mr-1.5 h-3 w-3" />
+          View Radar
               </Button>
             </div>
           </div>
