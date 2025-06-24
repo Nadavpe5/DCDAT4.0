@@ -33,6 +33,8 @@ import {
   Shield,
   CircuitBoard,
   Gauge,
+  Monitor,
+  HardDriveIcon,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
@@ -62,6 +64,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ToggleControls } from "@/components/toggle-controls"
 import { SensorButtons } from "@/components/sensor-buttons"
 import type React from "react"
+import Image from "next/image"
+import whiteLogo from "@/public/logo-white.png"
 
 
 // Sample data for drivers
@@ -988,24 +992,68 @@ export default function Dashboard() {
       
             {/* iOS 26 Style Header */}
       <header className="card-modern p-8 rounded-3xl relative z-10 mb-8">
-        {/* Main Title */}
+        {/* Main Title and Logo */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-intel-medium bg-gradient-to-r from-white via-blue-100 to-white bg-clip-text text-transparent mb-2 text-intel-display tracking-tight">
             DC DAT 4.0
           </h1>
-          <p className="text-sm text-gray-400 font-intel-light tracking-wide text-intel-display">mobileye™</p>
-      </div>
+          <div className="flex justify-center mt-2">
+            <button
+              type="button"
+              onClick={() => {
+            // Require two clicks to activate TestTrack mode
+            if (!testTrackMode) {
+            // First click: do nothing except show toast
+            toast({
+              title: "TestTrack Mode",
+              description: "Click again to activate TestTrack Mode.",
+              variant: "default"
+            });
+            setTestTrackMode("pending");
+            } else if (testTrackMode === "pending") {
+            // Second click: activate
+            setTestTrackMode(true);
+            toast({
+              title: "TestTrack Mode",
+              description: "Activated ✅",
+              variant: "default"
+            });
+            } else if (testTrackMode === true) {
+            // Deactivate
+            setTestTrackMode(false);
+            toast({
+              title: "TestTrack Mode",
+              description: "Deactivated ❌",
+              variant: "destructive"
+            });
+            }
+              }}
+              className={cn(
+            "rounded-lg p-1 transition-all duration-200 flex items-center",
+            testTrackMode === true
+            ? "ring-2 ring-blue-400 bg-blue-900/30 shadow-lg"
+            : "hover:ring-2 hover:ring-blue-300"
+              )}
+              aria-pressed={!!testTrackMode}
+              aria-label="Toggle TestTrack Mode"
+            >
+              <Image
+            src={whiteLogo}
+            alt="Mobileye Logo"
+            width={80}
+            height={24}
+            priority
+            className="object-contain"
+              />
+              {testTrackMode === true && (
+              <span className="ml-2 flex items-center"></span>
+              )}
+            </button>
+          </div>
+        </div>
 
-        {/* Modern Toggle Controls */}
-        <ToggleControls
-          testTrackMode={testTrackMode}
-          loggingMode={loggingMode}
-          onTestTrackToggle={setTestTrackMode}
-          onLoggingToggle={(checked) => {
-            setLoggingMode(checked)
-            if (checked) openLoggingModal()
-          }}
-        />
+        {/* Modern Toggle Controls - REMOVED */}
+        {/* <ToggleControls ... /> */}
 
         {/* System Status Indicators */}
         <div className="mt-5 space-y-5">
@@ -1015,7 +1063,7 @@ export default function Dashboard() {
               "flex items-center gap-2 px-4 py-2 rounded-full font-intel-medium text-xs transition-all duration-300 text-intel-display",
               "bg-green-500/20 text-green-400 border-green-500/30"
             )}>
-              <Cpu className="h-3 w-3" />
+              <HardDriveIcon className="h-3 w-3" />
               Logger
               <CheckCircle className="h-3 w-3" />
             </Badge>
@@ -1023,11 +1071,11 @@ export default function Dashboard() {
             {/* EPM Pill */}
             <Badge className={cn(
               "flex items-center gap-2 px-4 py-2 rounded-full font-intel-medium text-xs transition-all duration-300 text-intel-display",
-              "bg-red-500/20 text-red-400 border-red-500/30"
+              "bg-green-500/20 text-green-400 border-green-500/30"
             )}>
-              <Zap className="h-3 w-3" />
+              <Cpu className="h-3 w-3" />
               EPM
-              <X className="h-3 w-3" />
+              <CheckCircle className="h-3 w-3" />
             </Badge>
               </div>
 
