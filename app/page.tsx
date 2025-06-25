@@ -1679,44 +1679,7 @@ export default function Dashboard() {
           )}
         </div>
 
-        {/* Core System Status */}
-        <div className="card-modern p-6 rounded-3xl mb-6">
-          <div className="flex items-center gap-2 mb-4">
-            <CircuitBoard className="h-5 w-5 text-green-400" />
-            <div className="text-lg font-intel-medium text-intel-display">Core Systems</div>
-          </div>
-          
-            <div className="grid grid-cols-1 gap-3">
-            <SystemStatusIndicator 
-              name="Orchestrator" 
-              isActive={true} 
-              icon={<Cpu className="h-4 w-4" />}
-              description="Main coordinator"
-              priority="high"
-            />
-            <SystemStatusIndicator 
-              name="Logger" 
-              isActive={true} 
-              icon={<HardDrive className="h-4 w-4" />}
-              description="Data recording"
-              priority="high"
-            />
-            <SystemStatusIndicator 
-              name="MQTT" 
-              isActive={true} 
-              icon={<Wifi className="h-4 w-4" />}
-              description="Message broker"
-              priority="normal"
-            />
-            <SystemStatusIndicator 
-              name="Ruler" 
-              isActive={false} 
-              icon={<Gauge className="h-4 w-4" />}
-              description="Performance monitor"
-              priority="low"
-            />
-            </div>
-        </div>
+        {/* Core System Status removed */}
 
         {/* System Validations removed */}
 
@@ -1790,6 +1753,8 @@ export default function Dashboard() {
               </PopoverContent>
             </Popover>
           </div>
+
+
 
 
           <DialogFooter className="sm:justify-end">
@@ -2642,7 +2607,7 @@ export default function Dashboard() {
       {/* Logging Mode UI with deep debug features */}
       {showLoggingModal && (
         <Dialog open={showLoggingModal} onOpenChange={closeLoggingModal}>
-          <DialogContent className="modal-full modal-content modal-logging max-w-12xl px-0">
+          <DialogContent className="modal-full modal-content modal-logging max-w-2xl px-1">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2 text-lg font-semibold">
                 <Terminal className="w-5 h-5 text-muted-foreground" />
@@ -2675,7 +2640,7 @@ export default function Dashboard() {
               </Button>
               <Button
               variant="secondary"
-              className="flex items-center justify-center h-10 px-2 text-xs font-medium gap-1.5"
+              className="flex items-center justify-center h-10 px-2 text-xs font-medium gap-1.35"
               >
               <Cpu className="w-4 h-4" />
               Health Check
@@ -2694,16 +2659,16 @@ export default function Dashboard() {
               <HardDriveDownload className="w-4 h-4" />
               Mirror Disk
               </Button>
+                <Button
+                variant="secondary"
+                className="flex items-center justify-center h-10 px-2 text-xs font-medium gap-0.5 min-w-[100px]"
+                >
+                <RefreshCw className="w-4 h-4" />
+                Restart Docker
+                </Button>
               <Button
               variant="secondary"
-              className="flex items-center justify-center h-10 px-2 text-xs font-medium gap-1.5"
-              >
-              <RefreshCw className="w-4 h-4" />
-              Restart Docker
-              </Button>
-              <Button
-              variant="secondary"
-              className="flex items-center justify-center h-10 px-2 text-xs font-medium gap-1.5"
+              className="flex items-center justify-center h-10 px-2 text-xs font-medium gap-1.35"
               >
               <ScanBarcode className="w-4 h-4" />
               Generate QR
@@ -2715,6 +2680,44 @@ export default function Dashboard() {
               <Save className="w-4 h-4" />
               Clear GT
               </Button>
+            </div>
+
+            {/* Core System Status block */}
+            <div className="card-modern p-6 rounded-3xl mt-6" style={{ backgroundColor: "#000" }}>
+              <div className="flex items-center gap-2 mb-4">
+              <CircuitBoard className="h-5 w-5 text-green-400" />
+              <div className="text-lg font-intel-medium text-intel-display">Core Systems</div>
+              </div>
+              <div className="grid grid-cols-1 gap-3">
+              <SystemStatusIndicator
+                name="Orchestrator"
+                isActive={true}
+                icon={<Cpu className="h-4 w-4" />}
+                description="Main coordinator"
+                priority="high"
+              />
+              <SystemStatusIndicator
+                name="Logger"
+                isActive={true}
+                icon={<HardDrive className="h-4 w-4" />}
+                description="Data recording"
+                priority="high"
+              />
+              <SystemStatusIndicator
+                name="MQTT"
+                isActive={true}
+                icon={<Wifi className="h-4 w-4" />}
+                description="Message broker"
+                priority="normal"
+              />
+              <SystemStatusIndicator
+                name="Ruler"
+                isActive={false}
+                icon={<Gauge className="h-4 w-4" />}
+                description="Performance monitor"
+                priority="low"
+              />
+              </div>
             </div>
 
             {/* 🔍 TAPI + Camera System Diagnostics */}
