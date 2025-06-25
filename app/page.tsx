@@ -1791,6 +1791,7 @@ export default function Dashboard() {
             </Popover>
           </div>
 
+
           <DialogFooter className="sm:justify-end">
             <Button type="button" className="w-full" disabled={!selectedDriver} onClick={handleDriverSelected}>
               Continue
@@ -2641,7 +2642,7 @@ export default function Dashboard() {
       {/* Logging Mode UI with deep debug features */}
       {showLoggingModal && (
         <Dialog open={showLoggingModal} onOpenChange={closeLoggingModal}>
-          <DialogContent className="modal-full modal-content modal-logging">
+          <DialogContent className="modal-full modal-content modal-logging max-w-12xl px-0">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2 text-lg font-semibold">
                 <Terminal className="w-5 h-5 text-muted-foreground" />
@@ -2665,33 +2666,54 @@ export default function Dashboard() {
 
             {/* 🧪 Debug Buttons */}
             <div className="grid grid-cols-3 md:grid-cols-4 gap-3 mt-4">
-              <Button variant="secondary">
-                <ServerOff className="w-4 h-4 mr-1" />
-                Power Off
+              <Button
+              variant="secondary"
+              className="flex items-center justify-center h-10 px-2 text-xs font-medium gap-1.5"
+              >
+              <ServerOff className="w-4 h-4" />
+              Power Off
               </Button>
-              <Button variant="secondary">
-                <Cpu className="w-4 h-4 mr-1" />
-                Health Check
+              <Button
+              variant="secondary"
+              className="flex items-center justify-center h-10 px-2 text-xs font-medium gap-1.5"
+              >
+              <Cpu className="w-4 h-4" />
+              Health Check
               </Button>
-              <Button variant="secondary">
-                <Save className="w-4 h-4 mr-1" />
-                Save GT
+              <Button
+              variant="secondary"
+              className="flex items-center justify-center h-10 px-2 text-xs font-medium gap-1.5"
+              >
+              <Save className="w-4 h-4" />
+              Save GT
               </Button>
-              <Button variant="secondary">
-                <HardDriveDownload className="w-4 h-4 mr-1" />
-                Mirror Disk
+              <Button
+              variant="secondary"
+              className="flex items-center justify-center h-10 px-2 text-xs font-medium gap-1.5"
+              >
+              <HardDriveDownload className="w-4 h-4" />
+              Mirror Disk
               </Button>
-              <Button variant="secondary">
-                <RefreshCw className="w-4 h-4 mr-1" />
-                Restart Docker
+              <Button
+              variant="secondary"
+              className="flex items-center justify-center h-10 px-2 text-xs font-medium gap-1.5"
+              >
+              <RefreshCw className="w-4 h-4" />
+              Restart Docker
               </Button>
-              <Button variant="secondary">
-                <ScanBarcode className="w-4 h-4 mr-1" />
-                Generate QR
+              <Button
+              variant="secondary"
+              className="flex items-center justify-center h-10 px-2 text-xs font-medium gap-1.5"
+              >
+              <ScanBarcode className="w-4 h-4" />
+              Generate QR
               </Button>
-              <Button variant="destructive">
-                <Save className="w-4 h-4 mr-1" />
-                Clear GT
+              <Button
+              variant="destructive"
+              className="flex items-center justify-center h-10 px-2 text-xs font-medium gap-1.5"
+              >
+              <Save className="w-4 h-4" />
+              Clear GT
               </Button>
             </div>
 
@@ -2712,26 +2734,29 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              {/* 📷 Camera Attachments */}
-              <div>
+                {/* 📷 Camera Attachments */}
+                <div>
                 <h4 className="text-sm font-medium mb-2 flex items-center gap-1 text-muted-foreground">
-                  <Camera className="w-4 h-4" />
+                  <Car className="w-4 h-4" />
                   Connected Cameras
                 </h4>
                 <ul className="space-y-1 text-sm">
                   {[
-                    'Main',
-                    'Rear',
-                    'FrontCornerLeft',
-                    'FrontCornerRight',
-                    'ParkingFront_Right',
-                    'ParkingFront_Left',
-                    'Narrow'
+                  'Main',
+                  'Rear',
+                  'FrontCornerLeft',
+                  'FrontCornerRight',
+                  'ParkingFront_Right',
+                  'ParkingFront_Left',
+                  'Narrow'
                   ].map((cam) => (
-                    <li key={cam} className="flex items-center gap-1">📷 {cam}</li>
+                  <li key={cam} className="flex items-center gap-1">
+                    <Camera className="w-4 h-4 text-slate-400" />
+                    {cam}
+                  </li>
                   ))}
                 </ul>
-              </div>
+                </div>
             </div>
           </DialogContent>
         </Dialog>
