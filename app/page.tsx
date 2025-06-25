@@ -250,7 +250,7 @@ export default function Dashboard() {
   // Additional state variables
   const [insChecked, setInsChecked] = useState(true)
   const [velodyneChecked, setVelodyneChecked] = useState(true)
-  const [testTrackMode, setTestTrackMode] = useState(false)
+  const [testTrackMode, setTestTrackMode] = useState<false | true | "pending">(false)
   const [timerInterval, setTimerInterval] = useState<NodeJS.Timeout | null>(null)
   const [startTime, setStartTime] = useState<Date | null>(null)
 
@@ -1081,16 +1081,85 @@ export default function Dashboard() {
 
           {/* Recording Timer and Controls */}
           <div className="card-modern p-6 rounded-3xl">
+            {/* --- Compact System Indicators (2 rows, above timer) --- */}
+            <div className="mb-6 flex flex-wrap gap-2 justify-center">
+              {/* Row 1 */}
+              <div className="flex flex-wrap gap-2 w-full justify-center">
+              <div className={cn(
+                "flex items-center rounded-full px-3 py-1 min-w-[90px] font-intel-medium text-xs transition-all duration-300",
+                gpsValid
+                ? "bg-green-500/20 text-green-400 border border-green-500/30"
+                : "bg-red-500/20 text-red-400 border border-red-500/30"
+              )}>
+                <span className="mr-1" role="img" aria-label="satellite">
+                <Satellite className="h-4 w-4" style={{ color: "#38bdf8", filter: "drop-shadow(0 0 2px #38bdf8)" }} />
+                </span>
+                GPS
+                {gpsValid && <CheckCircle className="h-4 w-4 ml-1 text-green-400" />}
+              </div>
+              <div className={cn(
+                "flex items-center rounded-full px-3 py-1 min-w-[90px] font-intel-medium text-xs transition-all duration-300",
+                signalsValid
+                ? "bg-green-500/20 text-green-400 border border-green-500/30"
+                : "bg-red-500/20 text-red-400 border border-red-500/30"
+              )}>
+                <span className="mr-1" role="img" aria-label="activity">
+                <Activity className="h-4 w-4" style={{ color: "#facc15", filter: "drop-shadow(0 0 2px #facc15)" }} />
+                </span>
+                Signals
+                {signalsValid && <CheckCircle className="h-4 w-4 ml-1 text-green-400" />}
+              </div>
+              <div className={cn(
+                "flex items-center rounded-full px-3 py-1 min-w-[90px] font-intel-medium text-xs transition-all duration-300",
+                gtDataValid
+                ? "bg-green-500/20 text-green-400 border border-green-500/30"
+                : "bg-red-500/20 text-red-400 border border-red-500/30"
+              )}>
+                <span className="mr-1" role="img" aria-label="database">
+                <Database className="h-4 w-4" style={{ color: "#a3e635", filter: "drop-shadow(0 0 2px #a3e635)" }} />
+                </span>
+                GTData
+                {gtDataValid && <CheckCircle className="h-4 w-4 ml-1 text-green-400" />}
+              </div>
+              </div>
+              {/* Row 2 */}
+              <div className="flex flex-wrap gap-2 w-full justify-center">
+              <div className={cn(
+                "flex items-center rounded-full px-3 py-1 min-w-[90px] font-intel-medium text-xs transition-all duration-300",
+                framesValid
+                ? "bg-green-500/20 text-green-400 border border-green-500/30"
+                : "bg-red-500/20 text-red-400 border border-red-500/30"
+              )}>
+                <span className="mr-1" role="img" aria-label="camera">
+                <Camera className="h-4 w-4" style={{ color: "#60a5fa", filter: "drop-shadow(0 0 2px #60a5fa)" }} />
+                </span>
+                Frames
+                {framesValid && <CheckCircle className="h-4 w-4 ml-1 text-green-400" />}
+              </div>
+              <div className={cn(
+                "flex items-center rounded-full px-3 py-1 min-w-[90px] font-intel-medium text-xs transition-all duration-300",
+                radarsValid
+                ? "bg-green-500/20 text-green-400 border border-green-500/30"
+                : "bg-red-500/20 text-red-400 border border-red-500/30"
+              )}>
+                <span className="mr-1" role="img" aria-label="radar">
+                <Radar className="h-4 w-4" style={{ color: "#34d399", filter: "drop-shadow(0 0 2px #34d399)" }} />
+                </span>
+                Radars
+                {radarsValid && <CheckCircle className="h-4 w-4 ml-1 text-green-400" />}
+              </div>
+              </div>
+            </div>
             {/* Digital Timer */}
             <div className="text-center mb-4">
               <div className="text-5xl font-intel-light bg-gradient-to-r from-white via-blue-100 to-white bg-clip-text text-transparent tracking-wider text-intel-display">
                 {time}
-                </div>
+              </div>
               {isRecording && (
                 <div className="flex items-center justify-center gap-1.5 mt-2">
                   <div className="w-2 h-2 bg-red-700 rounded-full"></div>
                   <span className="text-xs text-slate-400 font-intel-medium text-intel-display">RECORDING</span>
-              </div>
+                </div>
               )}
             </div>
 
@@ -1649,66 +1718,7 @@ export default function Dashboard() {
             </div>
         </div>
 
-        {/* System Validations */}
-        <div className="card-modern p-6 rounded-3xl">
-          <div className="flex items-center gap-2 mb-4">
-            <Shield className="h-5 w-5 text-blue-400" />
-            <div className="text-lg font-intel-medium text-intel-display">System Status</div>
-          </div>
-          
-          <div className="space-y-3">
-            <ValidationItem 
-              name="GPS" 
-              isValid={gpsValid} 
-              icon={<Satellite className="h-4 w-4" />}
-              description="Satellite positioning"
-              value={gpsValid ? "8 sats" : "No signal"}
-            />
-            <ValidationItem 
-              name="Signals" 
-              isValid={signalsValid} 
-              icon={<Activity className="h-4 w-4" />}
-              description="Data transmission"
-              value={signalsValid ? "Strong" : "Weak"}
-            />
-            <ValidationItem 
-              name="GTData" 
-              isValid={gtDataValid} 
-              icon={<Database className="h-4 w-4" />}
-              description="Ground truth logging"
-              value={gtDataValid ? "Active" : "Inactive"}
-            />
-            <ValidationItem 
-              name="Frames" 
-              isValid={framesValid} 
-              icon={<Camera className="h-4 w-4" />}
-              description="Camera capture"
-              value={framesValid ? "30 FPS" : "0 FPS"}
-            />
-            <ValidationItem 
-              name="Radars" 
-              isValid={radarsValid} 
-              icon={<Radar className="h-4 w-4" />}
-              description="Sensor array"
-              value={radarsValid ? "4 active" : "0 active"}
-            />
-            </div>
-          
-            {testTrackMode && (validTTReps > 0 || invalidTTReps > 0) && (
-            <div className="mt-3 pt-3 border-t border-white/5 space-y-1">
-              <div className="flex items-center justify-between text-xs">
-                <span className="text-green-400 flex items-center gap-1">
-                  <Check className="h-3 w-3" />
-                  Valid: {validTTReps}
-                </span>
-                <span className="text-red-400 flex items-center gap-1">
-                  <X className="h-3 w-3" />
-                  Invalid: {invalidTTReps}
-                </span>
-                </div>
-                </div>
-          )}
-        </div>
+        {/* System Validations removed */}
 
         {/* Logging Mode Button */}
         <Button 
@@ -1717,6 +1727,7 @@ export default function Dashboard() {
           className="mt-4 btn-modern"
         >
           <BugPlay className="w-4 h-4 mr-1.5" />
+         
           Debug Console
         </Button>
 
