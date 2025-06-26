@@ -1001,8 +1001,8 @@ export default function Dashboard() {
             <button
               type="button"
               onClick={() => {
-            // Require two clicks to activate TestTrack mode
-            if (!testTrackMode) {
+          // Require two clicks to activate TestTrack mode
+          if (!testTrackMode) {
             // First click: do nothing except show toast
             toast({
               title: "TestTrack Mode",
@@ -1010,7 +1010,7 @@ export default function Dashboard() {
               variant: "default"
             });
             setTestTrackMode("pending");
-            } else if (testTrackMode === "pending") {
+          } else if (testTrackMode === "pending") {
             // Second click: activate
             setTestTrackMode(true);
             toast({
@@ -1018,7 +1018,7 @@ export default function Dashboard() {
               description: "Activated ✅",
               variant: "default"
             });
-            } else if (testTrackMode === true) {
+          } else if (testTrackMode === true) {
             // Deactivate
             setTestTrackMode(false);
             toast({
@@ -1026,11 +1026,11 @@ export default function Dashboard() {
               description: "Deactivated ❌",
               variant: "destructive"
             });
-            }
+          }
               }}
               className={cn(
-            "rounded-lg p-1 transition-all duration-200 flex items-center",
-            testTrackMode === true
+          "rounded-lg p-1 transition-all duration-200 flex items-center relative",
+          testTrackMode === true
             ? "ring-2 ring-blue-400 bg-blue-900/30 shadow-lg"
             : "hover:ring-2 hover:ring-blue-300"
               )}
@@ -1038,15 +1038,19 @@ export default function Dashboard() {
               aria-label="Toggle TestTrack Mode"
             >
               <Image
-            src={whiteLogo}
-            alt="Mobileye Logo"
-            width={80}
-            height={24}
-            priority
-            className="object-contain"
+          src={whiteLogo}
+          alt="Mobileye Logo"
+          width={80}
+          height={24}
+          priority
+          className="object-contain"
               />
               {testTrackMode === true && (
-              <span className="ml-2 flex items-center"></span>
+          <span className="ml-3 flex items-center">
+            <span className="rounded-full border border-green-400 px-1 py-0.5 text-green-400 font-bold text-[10px] bg-green-900/30 shadow-sm" style={{ letterSpacing: 1 }}>
+              TT
+            </span>
+          </span>
               )}
             </button>
           </div>
