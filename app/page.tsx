@@ -80,8 +80,8 @@ const drivers = [
 const existingSubtasks = [
   {
     id: "1",
-    summary: "Highway Lane Change",
-    type: "Driving",
+    summary: "DATACO-22345 Highway Lane Change",
+    type: "Hours",
     amountNeeded: 10,
     requestedEvents: "Lane changes on highway with moderate traffic",
     metadata: {
@@ -94,7 +94,7 @@ const existingSubtasks = [
   },
   {
     id: "2",
-    summary: "Urban Intersection",
+    summary: "DATACO-32456 Urban Intersection",
     type: "Driving",
     amountNeeded: 15,
     requestedEvents: "Navigate busy intersections with pedestrians",
@@ -108,7 +108,7 @@ const existingSubtasks = [
   },
   {
     id: "3",
-    summary: "Parking Lot Navigation",
+    summary: "DATACO-12365 Parking Lot Navigation",
     type: "Parking",
     amountNeeded: 8,
     requestedEvents: "Parallel and perpendicular parking scenarios",
@@ -122,7 +122,7 @@ const existingSubtasks = [
   },
   {
     id: "4",
-    summary: "Cut-in Scenario",
+    summary: "DATACO-12365 Cut-in Scenario",
     type: "Scenario",
     amountNeeded: 20,
     requestedEvents: "Vehicle cuts in front at varying distances",
@@ -136,7 +136,7 @@ const existingSubtasks = [
   },
   {
     id: "5",
-    summary: "Emergency Brake Scenario",
+    summary: "DATACO-12365 Emergency Brake Scenario",
     type: "Scenario",
     amountNeeded: 15,
     requestedEvents: "Lead vehicle performs emergency brake",
@@ -155,7 +155,7 @@ const completedSessions = [
   {
     id: "1",
     name: "Morning Drive #1",
-    subtask: "Highway Lane Change",
+    subtask: "DATACO-22345 Highway Lane Change",
     driver: "Nachum Gabi",
     date: "2025-05-20",
     duration: "00:32:15",
@@ -182,7 +182,7 @@ const completedSessions = [
   {
     id: "2",
     name: "Urban Drive #3",
-    subtask: "Urban Intersection",
+    subtask: "DATACO-32456 Urban Intersection",
     driver: "Evyatar Amiel",
     date: "2025-05-20",
     duration: "00:45:30",
@@ -202,7 +202,7 @@ const completedSessions = [
   {
     id: "3",
     name: "Parking Test #2",
-    subtask: "Parking Lot Navigation",
+    subtask: "DATACO-12365 Parking Lot Navigation",
     driver: "Daniel Levi",
     date: "2025-05-20",
     duration: "00:15:45",
