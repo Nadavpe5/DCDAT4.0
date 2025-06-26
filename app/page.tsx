@@ -1137,7 +1137,7 @@ export default function Dashboard() {
                 "flex items-center px-3 py-1 min-w-[90px] text-xs font-medium rounded-full border transition-all duration-300 shadow",
                 "bg-slate-700/40 text-slate-200 border-slate-500/30"
               )}>
-                <HardDriveIcon className="h-4 w-4 mr-1 text-slate-300" style={{ filter: "drop-shadow(0 0 2px #cbd5e1)" }} />
+                <Monitor className="h-4 w-4 mr-1 text-slate-300" style={{ filter: "drop-shadow(0 0 2px #cbd5e1)" }} />
                 Logger
                 <CheckCircle className="h-4 w-4 ml-1 text-green-400" />
               </div>
@@ -1449,7 +1449,7 @@ export default function Dashboard() {
             {/* Main Content */}
       <main className="p-6 flex flex-col gap-8 relative z-10">
         {/* Radar/Map Display Component */}
-        {!showMap ? (
+        {showMap ? (
           <div className="card-modern p-6 rounded-3xl">
             <div className="flex items-center justify-between mb-3">
               <h3 className="font-medium text-base">Radar</h3>
@@ -1510,7 +1510,7 @@ export default function Dashboard() {
           variant="outline" 
           size="sm" 
           className="w-full mt-4 btn-modern text-blue-400 border-blue-500/20 hover:bg-blue-500/10"
-          onClick={() => setShowMap(true)}
+          onClick={() => setShowMap(false)}
               >
           <Map className="mr-2 h-3 w-3" />
           View Map
@@ -1520,7 +1520,7 @@ export default function Dashboard() {
         ) : (
           <div className="card-modern p-6 rounded-3xl h-[400px]">
             <div className="flex items-center justify-between mb-3">
-              <h3 className="font-medium text-base">Navigation</h3>
+              <h3 className="font-medium text-base">AV-Display</h3>
               <div className="flex items-center gap-2">
           <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-xs px-2 py-1 flex items-center gap-1">
             <CheckCircle className="h-4 w-4 text-green-400" />
@@ -1620,7 +1620,7 @@ export default function Dashboard() {
           variant="outline" 
           size="sm" 
           className="w-full btn-modern text-green-400 border-green-500/20 hover:bg-green-500/10 text-xs"
-          onClick={() => setShowMap(false)}
+          onClick={() => setShowMap(true)}
               >
           <Radio className="mr-1.5 h-3 w-3" />
           View Radar
