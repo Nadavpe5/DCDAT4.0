@@ -1056,100 +1056,104 @@ export default function Dashboard() {
         {/* <ToggleControls ... /> */}
 
         {/* System Status Indicators */}
-        <div className="mt-5 space-y-5">
-          <div className="flex gap-3 justify-center">
-            {/* Logger Pill */}
-            <Badge className={cn(
-              "flex items-center gap-2 px-4 py-2 rounded-full font-intel-medium text-xs transition-all duration-300 text-intel-display",
-              "bg-green-500/20 text-green-400 border-green-500/30"
-            )}>
-              <HardDriveIcon className="h-3 w-3" />
-              Logger
-              <CheckCircle className="h-3 w-3" />
-            </Badge>
-
-            {/* EPM Pill */}
-            <Badge className={cn(
-              "flex items-center gap-2 px-4 py-2 rounded-full font-intel-medium text-xs transition-all duration-300 text-intel-display",
-              "bg-green-500/20 text-green-400 border-green-500/30"
-            )}>
-              <Cpu className="h-3 w-3" />
-              EPM
-              <CheckCircle className="h-3 w-3" />
-            </Badge>
-              </div>
-
-          {/* Recording Timer and Controls */}
-          <div className="card-modern p-6 rounded-3xl">
-            {/* --- Compact System Indicators (2 rows, above timer) --- */}
-            <div className="mb-6 flex flex-wrap gap-2 justify-center">
-              {/* Row 1 */}
-              <div className="flex flex-wrap gap-2 w-full justify-center">
+        <div className="mt-5">
+          {/* Diamond layout: 2 / 3 / 2, centered, responsive */}
+          <div className="mb-4">
+            {/* Row 1: 2 pills */}
+            <div className="flex justify-center gap-2 mb-1">
+              {/* GPS */}
               <div className={cn(
-                "flex items-center rounded-full px-3 py-1 min-w-[90px] font-intel-medium text-xs transition-all duration-300",
+                "flex items-center px-3 py-1 min-w-[90px] text-xs font-medium rounded-full border transition-all duration-300 shadow",
                 gpsValid
-                ? "bg-green-500/20 text-green-400 border border-green-500/30"
-                : "bg-red-500/20 text-red-400 border border-red-500/30"
+                  ? "bg-green-500/20 text-green-400 border-green-500/30"
+                  : "bg-red-500/20 text-red-400 border-red-500/30"
               )}>
-                <span className="mr-1" role="img" aria-label="satellite">
-                <Satellite className="h-4 w-4" style={{ color: "#38bdf8", filter: "drop-shadow(0 0 2px #38bdf8)" }} />
-                </span>
+                <Satellite className="h-4 w-4 mr-1 text-sky-400" style={{ filter: "drop-shadow(0 0 2px #38bdf8)" }} />
                 GPS
-                {gpsValid && <CheckCircle className="h-4 w-4 ml-1 text-green-400" />}
+                {gpsValid
+                  ? <CheckCircle className="h-4 w-4 ml-1 text-green-400" />
+                  : <X className="h-4 w-4 ml-1 text-red-400" />}
               </div>
+              {/* Signals */}
               <div className={cn(
-                "flex items-center rounded-full px-3 py-1 min-w-[90px] font-intel-medium text-xs transition-all duration-300",
+                "flex items-center px-3 py-1 min-w-[90px] text-xs font-medium rounded-full border transition-all duration-300 shadow",
                 signalsValid
-                ? "bg-green-500/20 text-green-400 border border-green-500/30"
-                : "bg-red-500/20 text-red-400 border border-red-500/30"
+                  ? "bg-green-500/20 text-green-400 border-green-500/30"
+                  : "bg-red-500/20 text-red-400 border-red-500/30"
               )}>
-                <span className="mr-1" role="img" aria-label="activity">
-                <Activity className="h-4 w-4" style={{ color: "#facc15", filter: "drop-shadow(0 0 2px #facc15)" }} />
-                </span>
+                <Activity className="h-4 w-4 mr-1 text-yellow-400" style={{ filter: "drop-shadow(0 0 2px #facc15)" }} />
                 Signals
-                {signalsValid && <CheckCircle className="h-4 w-4 ml-1 text-green-400" />}
-              </div>
-              <div className={cn(
-                "flex items-center rounded-full px-3 py-1 min-w-[90px] font-intel-medium text-xs transition-all duration-300",
-                gtDataValid
-                ? "bg-green-500/20 text-green-400 border border-green-500/30"
-                : "bg-red-500/20 text-red-400 border border-red-500/30"
-              )}>
-                <span className="mr-1" role="img" aria-label="database">
-                <Database className="h-4 w-4" style={{ color: "#a3e635", filter: "drop-shadow(0 0 2px #a3e635)" }} />
-                </span>
-                GTData
-                {gtDataValid && <CheckCircle className="h-4 w-4 ml-1 text-green-400" />}
-              </div>
-              </div>
-              {/* Row 2 */}
-              <div className="flex flex-wrap gap-2 w-full justify-center">
-              <div className={cn(
-                "flex items-center rounded-full px-3 py-1 min-w-[90px] font-intel-medium text-xs transition-all duration-300",
-                framesValid
-                ? "bg-green-500/20 text-green-400 border border-green-500/30"
-                : "bg-red-500/20 text-red-400 border border-red-500/30"
-              )}>
-                <span className="mr-1" role="img" aria-label="camera">
-                <Camera className="h-4 w-4" style={{ color: "#60a5fa", filter: "drop-shadow(0 0 2px #60a5fa)" }} />
-                </span>
-                Frames
-                {framesValid && <CheckCircle className="h-4 w-4 ml-1 text-green-400" />}
-              </div>
-              <div className={cn(
-                "flex items-center rounded-full px-3 py-1 min-w-[90px] font-intel-medium text-xs transition-all duration-300",
-                radarsValid
-                ? "bg-green-500/20 text-green-400 border border-green-500/30"
-                : "bg-red-500/20 text-red-400 border border-red-500/30"
-              )}>
-                <span className="mr-1" role="img" aria-label="radar">
-                <Radar className="h-4 w-4" style={{ color: "#34d399", filter: "drop-shadow(0 0 2px #34d399)" }} />
-                </span>
-                Radars
-                {radarsValid && <CheckCircle className="h-4 w-4 ml-1 text-green-400" />}
-              </div>
+                {signalsValid
+                  ? <CheckCircle className="h-4 w-4 ml-1 text-green-400" />
+                  : <X className="h-4 w-4 ml-1 text-red-400" />}
               </div>
             </div>
+            {/* Row 2: 3 pills */}
+            <div className="flex justify-center gap-2 mb-1">
+              {/* GTData */}
+              <div className={cn(
+                "flex items-center px-3 py-1 min-w-[90px] text-xs font-medium rounded-full border transition-all duration-300 shadow",
+                gtDataValid
+                  ? "bg-green-500/20 text-green-400 border-green-500/30"
+                  : "bg-red-500/20 text-red-400 border-red-500/30"
+              )}>
+                <Database className="h-4 w-4 mr-1 text-lime-400" style={{ filter: "drop-shadow(0 0 2px #a3e635)" }} />
+                GTData
+                {gtDataValid
+                  ? <CheckCircle className="h-4 w-4 ml-1 text-green-400" />
+                  : <X className="h-4 w-4 ml-1 text-red-400" />}
+              </div>
+              {/* Frames */}
+              <div className={cn(
+                "flex items-center px-3 py-1 min-w-[90px] text-xs font-medium rounded-full border transition-all duration-300 shadow",
+                framesValid
+                  ? "bg-green-500/20 text-green-400 border-green-500/30"
+                  : "bg-red-500/20 text-red-400 border-red-500/30"
+              )}>
+                <Camera className="h-4 w-4 mr-1 text-blue-400" style={{ filter: "drop-shadow(0 0 2px #60a5fa)" }} />
+                Frames
+                {framesValid
+                  ? <CheckCircle className="h-4 w-4 ml-1 text-green-400" />
+                  : <X className="h-4 w-4 ml-1 text-red-400" />}
+              </div>
+              {/* Radars */}
+              <div className={cn(
+                "flex items-center px-3 py-1 min-w-[90px] text-xs font-medium rounded-full border transition-all duration-300 shadow",
+                radarsValid
+                  ? "bg-green-500/20 text-green-400 border-green-500/30"
+                  : "bg-red-500/20 text-red-400 border-red-500/30"
+              )}>
+                <Radar className="h-4 w-4 mr-1 text-emerald-400" style={{ filter: "drop-shadow(0 0 2px #34d399)" }} />
+                Radars
+                {radarsValid
+                  ? <CheckCircle className="h-4 w-4 ml-1 text-green-400" />
+                  : <X className="h-4 w-4 ml-1 text-red-400" />}
+              </div>
+            </div>
+            {/* Row 3: 2 pills */}
+            <div className="flex justify-center gap-2">
+              {/* Logger */}
+              <div className={cn(
+                "flex items-center px-3 py-1 min-w-[90px] text-xs font-medium rounded-full border transition-all duration-300 shadow",
+                "bg-slate-700/40 text-slate-200 border-slate-500/30"
+              )}>
+                <HardDriveIcon className="h-4 w-4 mr-1 text-slate-300" style={{ filter: "drop-shadow(0 0 2px #cbd5e1)" }} />
+                Logger
+                <CheckCircle className="h-4 w-4 ml-1 text-green-400" />
+              </div>
+              {/* EPM */}
+              <div className={cn(
+                "flex items-center px-3 py-1 min-w-[90px] text-xs font-medium rounded-full border transition-all duration-300 shadow",
+                "bg-indigo-700/30 text-indigo-200 border-indigo-500/20"
+              )}>
+                <Cpu className="h-4 w-4 mr-1 text-indigo-300" style={{ filter: "drop-shadow(0 0 2px #818cf8)" }} />
+                EPM
+                <CheckCircle className="h-4 w-4 ml-1 text-green-400" />
+              </div>
+            </div>
+          </div>
+          {/* ...existing code... */}
+          <div className="card-modern p-6 rounded-3xl">
             {/* Digital Timer */}
             <div className="text-center mb-4">
               <div className="text-5xl font-intel-light bg-gradient-to-r from-white via-blue-100 to-white bg-clip-text text-transparent tracking-wider text-intel-display">
